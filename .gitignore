@@ -1,0 +1,33 @@
+# Ignore node_modules
+node_modules
+node_modules
+
+# Ignore target folder (compiled Java files)
+target/
+
+# Ignore IntelliJ IDEA files
+.idea/
+*.iml
+
+# Ignore Eclipse files
+.classpath
+.project
+.settings/
+
+# Ignore OS-specific files (Mac & Windows)
+.DS_Store
+Thumbs.db
+
+# Ignore logs and temporary files
+logs/
+*.log
+*.tmp
+
+# Ignore compiled Java classes
+*.class
+
+# Ignore environment variables
+.env
+
+# Ignore Maven dependencies (optional, only if needed)
+.m2/

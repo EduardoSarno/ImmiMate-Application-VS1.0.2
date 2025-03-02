@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Immigration Eligibility Calculator</title>
+
+  <!-- Link to CSS -->
+  <link rel="stylesheet" href="../css/formstyle.css" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- jQuery & Select2 -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"
+    defer
+  ></script>
+
+  <!-- Add this to the head section, before the closing </head> tag -->
+  <style>
+    /* Required field indicator */
+    .required-field::after {
+      content: " *";
+      color: #ff4d4d;
+      font-weight: bold;
+    }
+    
+    /* Form explanation */
+    .required-explanation {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    
+    .required-explanation span {
+      color: #ff4d4d;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- Fixed Progress Bar at Top -->
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <img
+        src="../Data/Images/Logos immimate/ImmiMate 2.0 Blue.png"
+        alt="Logo"
+        class="logo"
+      />
+      <span class="nav-logo">Immimate</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="form.html" class="nav-item active">Form</a>
+      <a href="chat.html">Chat</a>
+    </div>
+  </nav>
+  <br />
+
+  <!-- Main Form Container -->
+  <div class="form-container">
+    <h1>Immigration Eligibility Form</h1>
+    <p class="form-intro">
+      Please fill out all the required fields below to calculate your eligibility.
+      If you see any <span class="highlight">highlighted text</span>, it indicates
+      extra important information.
+    </p>
+
+    <!-- Add this right after the form intro paragraph, before the first section -->
+    <div class="required-explanation">
+      <span>*</span> indicates a required field
+    </div>
+
+    <!-- Where validation errors will appear -->
+    <div id="form-error-display" class="error-display" style="display: none;">
+      <!-- Error messages appended via JavaScript -->
+    </div>
+
+    <form id="eligibilityForm" method="POST">
+      <!-- Collapsible Section 1: Personal Information -->
+      <div
+        class="collapsible-section"
+        id="section-personal-info"
+        data-section-name="Personal Information"
+      >
+        <button type="button" class="section-header">
+          Personal Information <span class="chevron">&#9660;</span>
+        </button>
+        <div class="section-content" style="display: block;">
+          <div class="form-group">
+            <label for="fullName" class="required-field">
+              Full Name:
+              <span class="tooltip" data-tooltip="Enter your full legal name."
+                >?</span
+              ></label
+            >
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              placeholder="Your full name"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="age" class="required-field">Age:</label>
+            <input
+              type="number"
+              id="age"
+              name="age"
+              placeholder="Your age"
+              min="16"
+              required
+            />
+          </div>
+
+          <!-- Country of Citizenship -->
+          <div class="form-group">
+            <label for="countrySelect" class="required-field">
+              Country of Citizenship
+              <span class="highlight">(Search or scroll)</span>
+            </label>
+            <select id="countrySelect" name="citizenship" required>
+              <option value="">Select...</option>
+            </select>
+          </div>
+
+          <!-- Country of Residence -->
+          <div class="form-group">
+            <label for="countryOfResidence" class="required-field">Country of Residence:</label>
+            <select id="countryOfResidence" name="residence" required>
+              <option value="">Select...</option>
+            </select>
+          </div>
+
+          <!-- Marital Status -->
+          <div class="form-group">
+            <label class="required-field">Marital Status:</label>
+            <div class="pill-radio-group">
+              <input
+                type="radio"
+                id="maritalSingle"
+                name="maritalStatus"
+                value="single"
+                required
+              />
+              <label for="maritalSingle">Single</label>
+
+              <input
+                type="radio"
+                id="maritalMarried"
+                name="maritalStatus"
+                value="married"
+              />
+              <label for="maritalMarried">Married</label>
+
+              <input
+                type="radio"
+                id="maritalCommon"
+                name="maritalStatus"
+                value="common-law"
+              />
+              <label for="maritalCommon">Common-Law</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsible Section 2: Education -->
+      <div
+        class="collapsible-section"
+        id="section-education"
+        data-section-name="Education"
+      >
+        <button type="button" class="section-header">
+          Education <span class="chevron">&#9660;</span>
+        </button>
+        <div class="section-content">
+          <p>
+            <strong>Instructions (from Government of Canada):</strong><br />
+            Enter the highest level of education for which you:<br />
+            • earned a <span class="highlight">Canadian degree</span>, diploma or certificate,
+            <em>or</em><br />
+            • had an <span class="highlight">Educational Credential Assessment (ECA)</span> if you did your
+            study outside Canada.<br />
+            (ECAs must be from an approved agency, in the last five years.)
+          </p>
+
+          <div class="form-group">
+            <label for="educationLevel" class="required-field">Highest Level of Education:</label>
+            <select id="educationLevel" name="educationLevel" required>
+              <option value="">Select...</option>
+              <option value="none-or-less-than-secondary"
+                >None, or less than secondary (high school)</option
+              >
+              <option value="secondary-diploma"
+                >Secondary diploma (high school graduation)</option
+              >
+              <option value="one-year-program"
+                >One-year program at a university, college, trade or technical
+                school</option
+              >
+              <option value="two-year-program"
+                >Two-year program at a university, college, trade or technical
+                school</option
+              >
+              <option value="bachelors-degree"
+                >Bachelor's degree (3+ year program)</option
+              >
+              <option value="two-or-more-certificates"
+                >Two or more certificates/diplomas/degrees (one 3+ years)</option
+              >
+              <option value="masters"
+                >Master's degree, or professional degree (licensed profession)</option
+              >
+              <option value="doctoral"
+                >Doctoral level university degree (PhD)</option
+              >
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="required-field">Was your education completed in Canada?</label>
+            <div class="pill-radio-group">
+              <input
+                type="radio"
+                id="eduYes"
+                name="eduInCanada"
+                value="yes"
+                required
+              />
+              <label for="eduYes">Yes</label>
+
+              <input
+                type="radio"
+                id="eduNo"
+                name="eduInCanada"
+                value="no"
+              />
+              <label for="eduNo">No</label>
+            </div>
+          </div>
+
+          <div
+            class="form-group"
+            id="canadianEducationLevelGroup"
+            style="display: none;"
+          >
+            <label for="canadianEducationLevel" class="required-field">
+              If yes, choose the best answer to describe this Canadian
+              credential:</label
+            >
+            <select id="canadianEducationLevel" name="canadianEducationLevel">
+              <option value="">Select...</option>
+              <option value="secondary-or-less"
+                >Secondary (high school) or less</option
+              >
+              <option value=">One or two-year diploma"
+                >One- or two-year diploma or certificate</option
+              >
+              <option value="Degree 3+ years, or Masters/PhD"
+                >Degree/diploma 3+ years, or Master's/PhD</option
+              >
+            </select>
+            <small>
+              Distance learning counts for education points, but not always for
+              bonus points.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label class="required-field">
+              Do you have an Educational Credential Assessment (ECA) report?
+              <span
+                class="tooltip"
+                data-tooltip="An ECA is needed if your education was outside Canada."
+                >?</span
+              >
+            </label>
+            <div class="pill-radio-group">
+              <input
+                type="radio"
+                id="hasECAYes"
+                name="hasECA"
+                value="yes"
+                required
+              />
+              <label for="hasECAYes">Yes</label>
+
+              <input
+                type="radio"
+                id="hasECANo"
+                name="hasECA"
+                value="no"
+              />
+              <label for="hasECANo">No</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="required-field">Do you have a trades certification?</label>
+            <div class="pill-radio-group">
+              <input type="radio" id="tradesYes" name="tradesCertification" value="yes">
+              <label for="tradesYes">Yes</label>
+              <input type="radio" id="tradesNo" name="tradesCertification" value="no">
+              <label for="tradesNo">No</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsible Section 3: Language Proficiency -->
+      <div
+        class="collapsible-section"
+        id="section-language"
+        data-section-name="Language Proficiency"
+      >
+        <button type="button" class="section-header">
+          Language Proficiency <span class="chevron">&#9660;</span>
+        </button>
+        <div class="section-content">
+          <p>
+            <strong>Instructions (from Government of Canada):</strong><br />
+            • Canada's official languages are
+            <span class="highlight">English</span> and
+            <span class="highlight">French</span>.<br />
+            • You must submit language test results (less than 2 years old),
+            even if English or French is your first language.
+          </p>
+
+          <div class="form-group">
+            <label for="primaryLanguageTest" class="required-field">
+              Which test did you take for your
+              <strong>first</strong> official language?</label
+            >
+            <select id="primaryLanguageTest" name="primaryLanguageTest" required>
+              <option value="">Select...</option>
+              <option value="CELPIP">CELPIP-G</option>
+              <option value="IELTS">IELTS</option>
+              <option value="PTE">PTE Core</option>
+              <option value="TEF">TEF Canada</option>
+              <option value="TCF">TCF Canada</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="speaking" class="required-field">Speaking (CLB):</label>
+            <select id="speaking" name="speaking" required>
+              <option value="">Select...</option>
+              <option value="10">CLB 10 - 12</option>
+              <option value="9">CLB 9</option>
+              <option value="8">CLB 8</option>
+              <option value="7">CLB 7</option>
+              <option value="6">CLB 6</option>
+              <option value="5">CLB 5</option>
+              <option value="4">CLB 4</option>
+              <option value="3">CLB 0 - 3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="listening" class="required-field">Listening (CLB):</label>
+            <select id="listening" name="listening" required>
+              <option value="">Select...</option>
+              <option value="10">CLB 10 - 12</option>
+              <option value="9">CLB 9</option>
+              <option value="8">CLB 8</option>
+              <option value="7">CLB 7</option>
+              <option value="6">CLB 6</option>
+              <option value="5">CLB 5</option>
+              <option value="4">CLB 4</option>
+              <option value="3">CLB 0 - 3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="reading" class="required-field">Reading (CLB):</label>
+            <select id="reading" name="reading" required>
+              <option value="">Select...</option>
+              <option value="10">CLB 10 - 12</option>
+              <option value="9">CLB 9</option>
+              <option value="8">CLB 8</option>
+              <option value="7">CLB 7</option>
+              <option value="6">CLB 6</option>
+              <option value="5">CLB 5</option>
+              <option value="4">CLB 4</option>
+              <option value="3">CLB 0 - 3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="writing" class="required-field">Writing (CLB):</label>
+            <select id="writing" name="writing" required>
+              <option value="">Select...</option>
+              <option value="10">CLB 10 - 12</option>
+              <option value="9">CLB 9</option>
+              <option value="8">CLB 8</option>
+              <option value="7">CLB 7</option>
+              <option value="6">CLB 6</option>
+              <option value="5">CLB 5</option>
+              <option value="4">CLB 4</option>
+              <option value="3">CLB 0 - 3</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Secondary Language Proficiency -->
+      <div
+        class="collapsible-section"
+        id="section-secondary-language"
+        data-section-name="Secondary Language"
+      >
+        <button type="button" class="section-header">
+          Secondary Language Proficiency <span class="chevron">&#9660;</span>
+        </button>
+        <div class="section-content">
+          <p>
+            <strong>Did you take a second official language test?</strong> (Results
+            must be less than 2 years old.)
+          </p>
+          <div class="pill-radio-group">
+            <input
+              type="radio"
+              id="secLangYes"
+              name="secondaryLangTest"
+              value="yes"
+              required
+            />
+            <label for="secLangYes">Yes</label>
+
+            <input
+              type="radio"
+              id="secLangNo"
+              name="secondaryLangTest"
+              value="no"
+            />
+            <label for="secLangNo">No</label>
+          </div>
+
+          <div id="secondaryLangDetails" style="display: none;">
+            <div class="form-group">
+              <label for="secondaryLanguageTest" class="required-field">
+                Which test for your second official language?
+              </label>
+              <select id="secondaryLanguageTest" name="secondaryLanguageTest">
+                <option value="">Select...</option>
+                <option value="CELPIP">CELPIP-G</option>
+                <option value="IELTS">IELTS</option>
+                <option value="PTE">PTE Core</option>
+                <option value="TEF">TEF Canada</option>
+                <option value="TCF">TCF Canada</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="secSpeaking" class="required-field">Speaking (CLB):</label>
+              <select id="secSpeaking" name="secSpeaking">
+                <option value="">Select...</option>
+                <option value="10-12">CLB 10 - 12</option>
+                <option value="9">CLB 9</option>
+                <option value="8">CLB 8</option>
+                <option value="7">CLB 7</option>
+                <option value="6">CLB 6</option>
+                <option value="5">CLB 5</option>
+                <option value="4">CLB 4</option>
+                <option value="3">CLB 0 - 3</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="secListening" class="required-field">Listening (CLB):</label>
+              <select id="secListening" name="secListening">
+                <option value="">Select...</option>
+                <option value="10-12">CLB 10 - 12</option>
+                <option value="9">CLB 9</option>
+                <option value="8">CLB 8</option>
+                <option value="7">CLB 7</option>
+                <option value="6">CLB 6</option>
+                <option value="5">CLB 5</option>
+                <option value="4">CLB 4</option>
+                <option value="3">CLB 0 - 3</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="secReading" class="required-field">Reading (CLB):</label>
+              <select id="secReading" name="secReading">
+                <option value="">Select...</option>
+                <option value="10">CLB 10 - 12</option>
+                <option value="9">CLB 9</option>
+                <option value="8">CLB 8</option>
+                <option value="7">CLB 7</option>
+                <option value="6">CLB 6</option>
+                <option value="5">CLB 5</option>
+                <option value="4">CLB 4</option>
+                <option value="3">CLB 0 - 3</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="secWriting" class="required-field">Writing (CLB):</label>
+              <select id="secWriting" name="secWriting">
+                <option value="">Select...</option>
+                <option value="10-12">CLB 10 - 12</option>
+                <option value="9">CLB 9</option>
+                <option value="8">CLB 8</option>
+                <option value="7">CLB 7</option>
+                <option value="6">CLB 6</option>
+                <option value="5">CLB 5</option>
+                <option value="4">CLB 4</option>
+                <option value="3">CLB 0 - 3</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Work Experience Section -->
+      <div
+        class="collapsible-section"
+        id="section-work-experience"
+        data-section-name="Work Experience"
+      >
+        <button type="button" class="section-header">
+          Work Experience <span class="chevron">&#9660;</span>
+        </button>
+        <div class="section-content">
+          <p><strong>Instructions (based on IRCC):</strong></p>
+          <ul>
+            <li>In the last 10 years, how many years of <em>skilled</em> work have you done in Canada?</li>
+            <li>Must be paid, full-time (or equal part-time), TEER 0–3.</li>
+            <li>Foreign work must also be skilled (NOC TEER 0–3).</li>
+          </ul>
+
+          <div class="form-group">
+            <label for="canadianExp" class="required-field">Canadian Work Experience (years):</label>
+            <select id="canadianExp" name="canadianExp" required>
+              <option value="">Select...</option>
+              <option value="none-or-smaller than 1">None or &lt;1 year</option>
+              <option value="1">1 year</option>
+              <option value="2">2 years</option>
+              <option value="3">3 years</option>
+              <option value="4">4 years</option>
+              <option value="5+">5 years or more</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="nocCodeCanadian" class="required-field">
+              NOC Code for Canadian Work Experience:</label
+            >
+            <select id="nocCodeCanadian" name="nocCodeCanadian">
+              <option value="">Select occupation...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="foreignExp" class="required-field">
+              Foreign Work Experience (last 10 years):</label
+            >
+            <select id="foreignExp" name="foreignExp" required>
+              <option value="">Select...</option>
+              <option value="1">None or &lt;1 year</option>
+              <option value="1">1 year</option>
+              <option value="2">2 years</option>
+              <option value="3">3 years or more</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="nocCodeForeign" class="required-field">
+              NOC Code for Foreign Work Experience:</label
+            >
+            <select id="nocCodeForeign" name="nocCodeForeign">
+              <option value="">Select occupation...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="required-field">Are you currently working inside Canada?</label>
+            <div class="pill-radio-group">
+              <input
+                type="radio"
+                id="insideCanadaYes"
+                name="workInsideCanada"
+                value="yes"
+                required
+              />
+              <label for="insideCanadaYes">Yes</label>
+
+              <input
+                type="radio"
+                id="insideCanadaNo"
+                name="workInsideCanada"
+                value="no"
+              />
+              <label for="insideCanadaNo">No</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spouse / Common-Law Partner -->
+      <div
+        class="collapsible-section"
+        id="spouseSection"
+        data-section-name="Spouse/Common-Law Partner"
+        style="display: none;"
+      >
+        <button type="button" class="section-header">
+          Spouse / Common-Law Partner <span class="chevron">&#9660;</span>
+        </button>
+        <div class="section-content">
+          <p>
+            Please complete this section only if you are married or have a
+            common-law partner.
+          </p>
+
+          <div class="form-group">
+            <label for="partnerEducation" class="required-field">Spouse/Partner's Highest Education Level:</label>
+            <select id="partnerEducation" name="partnerEducation">
+              <option value="">Select...</option>
+              <option value="none-or-less-than-secondary"
+                >None or less than high school</option
+              >
+              <option value="secondary-diploma">High school diploma</option>
+              <option value="one-year-program">One-year program</option>
+              <option value="two-year-program">Two-year program</option>
+              <option value="bachelors-degree"
+                >Bachelor's degree (3+ yrs)</option
+              >
+              <option value="two-or-more-certificates">Two+ credentials</option>
+              <option value="masters"
+                >Master's or professional degree</option
+              >
+              <option value="doctoral">PhD</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="partnerLanguageTest" class="required-field">
+              Spouse/Partner's Language Test:</label
+            >
+            <select id="partnerLanguageTest" name="partnerLanguageTest">
+              <option value="">Select...</option>
+              <option value="CELPIP">CELPIP-G</option>
+              <option value="IELTS">IELTS</option>
+              <option value="PTE">PTE Core</option>
+              <option value="TEF">TEF Canada</option>
+              <option value="TCF">TCF Canada</option>
+            </select>
+          </div>
+
+          <!-- Spouse Language Scores -->
+          <div class="form-group">
+            <label for="partnerSpeaking" class="required-field">Speaking (CLB):</label>
+            <select id="partnerSpeaking" name="partnerSpeaking">
+              <option value="">Select...</option>
+              <option value="10-12">CLB 10 - 12</option>
+              <option value="9">CLB 9</option>
+              <option value="8">CLB 8</option>
+              <option value="7">CLB 7</option>
+              <option value="6">CLB 6</option>
+              <option value="5">CLB 5</option>
+              <option value="4">CLB 4</option>
+              <option value="0-3">CLB 0 - 3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="partnerListening" class="required-field">Listening (CLB):</label>
+            <select id="partnerListening" name="partnerListening">
+              <option value="">Select...</option>
+              <option value="10-12">CLB 10 - 12</option>
+              <option value="9">CLB 9</option>
+              <option value="8">CLB 8</option>
+              <option value="7">CLB 7</option>
+              <option value="6">CLB 6</option>
+              <option value="5">CLB 5</option>
+              <option value="4">CLB 4</option>
+              <option value="0-3">CLB 0 - 3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="partnerReading" class="required-field">Reading (CLB):</label>
+            <select id="partnerReading" name="partnerReading">
+              <option value="">Select...</option>
+              <option value="10-12">CLB 10 - 12</option>
+              <option value="9">CLB 9</option>
+              <option value="8">CLB 8</option>
+              <option value="7">CLB 7</option>
+              <option value="6">CLB 6</option>
+              <option value="5">CLB 5</option>
+              <option value="4">CLB 4</option>
+              <option value="0-3">CLB 0 - 3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="partnerWriting" class="required-field">Writing (CLB):</label>
+            <select id="partnerWriting" name="partnerWriting">
+              <option value="">Select...</option>
+              <option value="10-12">CLB 10 - 12</option>
+              <option value="9">CLB 9</option>
+              <option value="8">CLB 8</option>
+              <option value="7">CLB 7</option>
+              <option value="6">CLB 6</option>
+              <option value="5">CLB 5</option>
+              <option value="4">CLB 4</option>
+              <option value="0-3">CLB 0 - 3</option>
+            </select>
+          </div>
+
+          <!-- Spouse Canadian Work Experience -->
+          <div class="form-group">
+            <label for="partnerCanadianExp" class="required-field">
+              Spouse/Partner's Canadian Work Experience:</label
+            >
+            <select id="partnerCanadianExp" name="partnerCanadianExp">
+              <option value="">Select...</option>
+              <option value="0">None or less than 1 year</option>
+              <option value="1">1 year</option>
+              <option value="2">2 years</option>
+              <option value="3">3 years</option>
+              <option value="4">4 years</option>
+              <option value="5">5 years or more</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsible Section: Job Offer & Arranged Employment -->
+      <div
+        class="collapsible-section"
+        id="section-job-offer"
+        data-section-name="Job Offer"
+      >
+        <button type="button" class="section-header">
+          Job Offer & Arranged Employment <span class="chevron">&#9660;</span>
+        </button>
+        <div class="section-content">
+          <p>
+            A valid Canadian job offer must be full-time, TEER 0–3,
+            LMIA-supported (if needed), at least 1 year from becoming PR.
+          </p>
+
+          <div class="form-group">
+            <label class="required-field">Do you have a valid Canadian job offer?</label>
+            <div class="pill-radio-group">
+              <input
+                type="radio"
+                id="jobOfferYes"
+                name="jobOffer"
+                value="yes"
+                required
+              />
+              <label for="jobOfferYes">Yes</label>
+
+              <input
+                type="radio"
+                id="jobOfferNo"
+                name="jobOffer"
+                value="no"
+              />
+              <label for="jobOfferNo">No</label>
+            </div>
+          </div>
+
+          <div id="jobOfferDetails" style="display: none;">
+            <div class="form-group">
+              <label for="lmiaStatus" class="required-field">Is the job offer LMIA-approved?</label>
+              <select id="lmiaStatus" name="lmiaStatus">
+                <option value="">Select...</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="jobWage" class="required-field">Job Offer Wage (CAD per hour):</label>
+              <input
+                type="number"
+                id="jobWage"
+                name="jobWage"
+                placeholder="e.g., 35"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="jobOfferNocCode" class="required-field">Job Offer NOC Code:</label>
+              <select id="jobOfferNocCode" name="jobOfferNocCode">
+                <option value="">Select occupation...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="weeklyHours" class="required-field">Weekly Work Hours:</label>
+              <select id="weeklyHours" name="weeklyHours">
+                <option value="">Select...</option>
+                <option value="casual">Casual (~under 15 hrs/week)</option>
+                <option value="part-time">Part-time (15-30 hrs/week)</option>
+                <option value="full-time">Full-time (30+ hrs/week)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="jobDetails" class="required-field">Brief Job Details/Description:</label>
+              <textarea
+                id="jobDetails"
+                name="jobDetails"
+                placeholder="Provide details of your job offer"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Provincial Nomination & Connections -->
+      <div
+        class="collapsible-section"
+        id="section-provincial"
+        data-section-name="Provincial Nomination & Connections"
+      >
+        <button type="button" class="section-header">
+          Provincial Nomination & Connections <span class="chevron">&#9660;</span>
+        </button>
+        <div class="section-content">
+          <div class="form-group">
+            <label class="required-field">Do you have a Provincial Nomination?</label>
+            <div class="pill-radio-group">
+              <input
+                type="radio"
+                id="provYes"
+                name="provNomination"
+                value="yes"
+                required
+              />
+              <label for="provYes">Yes</label>
+
+              <input
+                type="radio"
+                id="provNo"
+                name="provNomination"
+                value="no"
+              />
+              <label for="provNo">No</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="provinceInterest" class="required-field">Province or Territory of Interest:</label>
+            <select id="provinceInterest" name="provinceInterest" required>
+              <option value="">Select...</option>
+              <option value="Ontario">Ontario</option>
+              <option value="British Columbia">British Columbia</option>
+              <option value="Alberta">Alberta</option>
+              <option value="Manitoba">Manitoba</option>
+              <option value="Saskatchewan">Saskatchewan</option>
+              <option value="Nova Scotia">Nova Scotia</option>
+              <option value="New Brunswick">New Brunswick</option>
+              <option value="Prince Edward Island">Prince Edward Island</option>
+              <option value="Yukon">Yukon</option>
+              <option value="Northwest Territories">Northwest Territories</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="required-field">Do you have any Canadian relatives that are permanent residents or citizens? (siblings, parents, grandparents)</label>
+            <div class="pill-radio-group">
+              <input
+                type="radio"
+                id="relativesYes"
+                name="canadianRelatives"
+                value="yes"
+                required
+              />
+              <label for="relativesYes">Yes</label>
+
+              <input
+                type="radio"
+                id="relativesNo"
+                name="canadianRelatives"
+                value="no"
+              />
+              <label for="relativesNo">No</label>
+            </div>
+          </div>
+
+          <div class="form-group" id="relativeDetails" style="display: none;">
+            <label for="relativeRelationship" class="required-field">
+              If yes, specify relationship:</label
+            >
+            <select id="relativeRelationship" name="relativeRelationship">
+              <option value="">Select...</option>
+              <option value="sibling">Sibling</option>
+              <option value="parent">Parent</option>
+              <option value="grandparent">Grandparent</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="required-field">Have you received an ITA for permanent residence?</label>
+            <div class="pill-radio-group">
+              <input
+                type="radio"
+                id="itaYes"
+                name="receivedITA"
+                value="yes"
+                required
+              />
+              <label for="itaYes">Yes</label>
+
+              <input
+                type="radio"
+                id="itaNo"
+                name="receivedITA"
+                value="no"
+              />
+              <label for="itaNo">No</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Information -->
+      <div
+        class="collapsible-section"
+        id="section-additional"
+        data-section-name="Additional Information"
+      >
+        <button type="button" class="section-header">
+          Additional Information <span class="chevron">&#9660;</span>
+        </button>
+        <div class="section-content">
+          <div class="form-group">
+            <label for="settlementFunds" class="required-field">Settlement Funds (in CAD):</label>
+            <input
+              type="number"
+              id="settlementFunds"
+              name="settlementFunds"
+              placeholder="Enter amount"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="preferredCity" class="required-field">Preferred City:</label>
+            <select id="preferredCity" name="preferredCity">
+              <option value="">Select...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="preferredDestination" class="required-field">Preferred Destination (Province):</label>
+            <select id="preferredDestination" name="preferredDestination">
+              <option value="">Select...</option>
+              <option value="Ontario">Ontario</option>
+              <option value="British Columbia">British Columbia</option>
+              <option value="Alberta">Alberta</option>
+              <option value="Manitoba">Manitoba</option>
+              <option value="Saskatchewan">Saskatchewan</option>
+              <option value="Nova Scotia">Nova Scotia</option>
+              <option value="New Brunswick">New Brunswick</option>
+              <option value="Prince Edward Island">Prince Edward Island</option>
+              <option value="Yukon">Yukon</option>
+              <option value="Northwest Territories">Northwest Territories</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="submit-container">
+        <button type="submit" class="btn-primary">Calculate Eligibility</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Initialize Select2 fields (Optional) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Already in formJS, but if you want to re-init here, you can
+      $("#countrySelect").select2({
+        placeholder: "Search and select a country",
+        allowClear: true
+      });
+      $("#countryOfResidence").select2({
+        placeholder: "Search and select a country",
+        allowClear: true
+      });
+      $("#nocCodeCanadian").select2({
+        placeholder: "Search Canadian NOC...",
+        allowClear: true
+      });
+      $("#nocCodeForeign").select2({
+        placeholder: "Search Foreign NOC...",
+        allowClear: true
+      });
+      $("#jobOfferNocCode").select2({
+        placeholder: "Search Job Offer NOC...",
+        allowClear: true
+      });
+      $("#preferredCity").select2({
+        placeholder: "Search City...",
+        allowClear: true
+      });
+    });
+  </script>
+
+  <!-- Load enhanced JS -->
+  <script type="module" src="../JavaScript/formJS.js"></script>
+</body>
+</html>

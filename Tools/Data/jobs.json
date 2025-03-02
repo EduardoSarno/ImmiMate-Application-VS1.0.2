@@ -1,0 +1,2497 @@
+[
+  {
+    "TEER": 0,
+    "NOC": 10010,
+    "Job Title": "Financial managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 10011,
+    "Job Title": "Human resources managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 10012,
+    "Job Title": "Purchasing managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 10019,
+    "Job Title": "Other administrative services managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 10020,
+    "Job Title": "Insurance, real estate and financial brokerage managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 10021,
+    "Job Title": "Banking, credit and other investment managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 10022,
+    "Job Title": "Advertising, marketing and public relations managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 10029,
+    "Job Title": "Other business services managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 10030,
+    "Job Title": "Telecommunication carriers managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 20010,
+    "Job Title": "Engineering managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 20011,
+    "Job Title": "Architecture and science managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 20012,
+    "Job Title": "Computer and information systems managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 30010,
+    "Job Title": "Managers in health care"
+  },
+  {
+    "TEER": 0,
+    "NOC": 40010,
+    "Job Title": "Government managers - health and social policy development and program administration"
+  },
+  {
+    "TEER": 0,
+    "NOC": 40011,
+    "Job Title": "Government managers - economic analysis, policy development and program administration"
+  },
+  {
+    "TEER": 0,
+    "NOC": 40012,
+    "Job Title": "Government managers - education policy development and program administration"
+  },
+  {
+    "TEER": 0,
+    "NOC": 40019,
+    "Job Title": "Other managers in public administration"
+  },
+  {
+    "TEER": 0,
+    "NOC": 40020,
+    "Job Title": "Administrators - post-secondary education and vocational training"
+  },
+  {
+    "TEER": 0,
+    "NOC": 40021,
+    "Job Title": "School principals and administrators of elementary and secondary education"
+  },
+  {
+    "TEER": 0,
+    "NOC": 40030,
+    "Job Title": "Managers in social, community and correctional services"
+  },
+  {
+    "TEER": 0,
+    "NOC": 40040,
+    "Job Title": "Commissioned police officers and related occupations in public protection services"
+  },
+  {
+    "TEER": 0,
+    "NOC": 40041,
+    "Job Title": "Fire chiefs and senior firefighting officers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 40042,
+    "Job Title": "Commissioned officers of the Canadian Armed Forces"
+  },
+  {
+    "TEER": 0,
+    "NOC": 50010,
+    "Job Title": "Library, archive, museum and art gallery managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 50011,
+    "Job Title": "Managers - publishing, motion pictures, broadcasting and performing arts"
+  },
+  {
+    "TEER": 0,
+    "NOC": 50012,
+    "Job Title": "Recreation, sports and fitness program and service directors"
+  },
+  {
+    "TEER": 0,
+    "NOC": 60010,
+    "Job Title": "Corporate sales managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 60020,
+    "Job Title": "Retail and wholesale trade managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 60030,
+    "Job Title": "Restaurant and food service managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 60031,
+    "Job Title": "Accommodation service managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 60040,
+    "Job Title": "Managers in customer and personal services"
+  },
+  {
+    "TEER": 0,
+    "NOC": 70010,
+    "Job Title": "Construction managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 70011,
+    "Job Title": "Home building and renovation managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 70012,
+    "Job Title": "Facility operation and maintenance managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 70020,
+    "Job Title": "Managers in transportation"
+  },
+  {
+    "TEER": 0,
+    "NOC": 70021,
+    "Job Title": "Postal and courier services managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 80010,
+    "Job Title": "Managers in natural resources production and fishing"
+  },
+  {
+    "TEER": 0,
+    "NOC": 80020,
+    "Job Title": "Managers in agriculture"
+  },
+  {
+    "TEER": 0,
+    "NOC": 80021,
+    "Job Title": "Managers in horticulture"
+  },
+  {
+    "TEER": 0,
+    "NOC": 80022,
+    "Job Title": "Managers in aquaculture"
+  },
+  {
+    "TEER": 0,
+    "NOC": 90010,
+    "Job Title": "Manufacturing managers"
+  },
+  {
+    "TEER": 0,
+    "NOC": 90011,
+    "Job Title": "Utilities managers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 11100,
+    "Job Title": "Financial auditors and accountants"
+  },
+  {
+    "TEER": 1,
+    "NOC": 11101,
+    "Job Title": "Financial and investment analysts"
+  },
+  {
+    "TEER": 1,
+    "NOC": 11102,
+    "Job Title": "Financial advisors"
+  },
+  {
+    "TEER": 1,
+    "NOC": 11103,
+    "Job Title": "Securities agents, investment dealers and brokers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 11109,
+    "Job Title": "Other financial officers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 11200,
+    "Job Title": "Human resources professionals"
+  },
+  {
+    "TEER": 1,
+    "NOC": 11201,
+    "Job Title": "Professional occupations in business management consulting"
+  },
+  {
+    "TEER": 1,
+    "NOC": 11202,
+    "Job Title": "Professional occupations in advertising, marketing and public relations"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21100,
+    "Job Title": "Physicists and astronomers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21101,
+    "Job Title": "Chemists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21102,
+    "Job Title": "Geoscientists and oceanographers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21103,
+    "Job Title": "Meteorologists and climatologists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21109,
+    "Job Title": "Other professional occupations in physical sciences"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21110,
+    "Job Title": "Biologists and related scientists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21111,
+    "Job Title": "Forestry professionals"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21112,
+    "Job Title": "Agricultural representatives, consultants and specialists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21120,
+    "Job Title": "Public and environmental health and safety professionals"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21200,
+    "Job Title": "Architects"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21201,
+    "Job Title": "Landscape architects"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21202,
+    "Job Title": "Urban and land use planners"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21203,
+    "Job Title": "Land surveyors"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21210,
+    "Job Title": "Mathematicians, statisticians and actuaries"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21211,
+    "Job Title": "Data scientists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21220,
+    "Job Title": "Cybersecurity specialists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21221,
+    "Job Title": "Business systems specialists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21222,
+    "Job Title": "Information systems specialists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21223,
+    "Job Title": "Database analysts and data administrators"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21230,
+    "Job Title": "Computer systems developers and programmers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21231,
+    "Job Title": "Software engineers and designers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21232,
+    "Job Title": "Software developers and programmers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21233,
+    "Job Title": "Web designers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21234,
+    "Job Title": "Web developers and programmers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21300,
+    "Job Title": "Civil engineers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21301,
+    "Job Title": "Mechanical engineers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21310,
+    "Job Title": "Electrical and electronics engineers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21311,
+    "Job Title": "Computer engineers (except software engineers and designers)"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21320,
+    "Job Title": "Chemical engineers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21321,
+    "Job Title": "Industrial and manufacturing engineers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21322,
+    "Job Title": "Metallurgical and materials engineers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21330,
+    "Job Title": "Mining engineers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21331,
+    "Job Title": "Geological engineers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21332,
+    "Job Title": "Petroleum engineers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21390,
+    "Job Title": "Aerospace engineers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 21399,
+    "Job Title": "Other professional engineers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31100,
+    "Job Title": "Specialists in clinical and laboratory medicine"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31101,
+    "Job Title": "Specialists in surgery"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31102,
+    "Job Title": "General practitioners and family physicians"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31103,
+    "Job Title": "Veterinarians"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31110,
+    "Job Title": "Dentists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31111,
+    "Job Title": "Optometrists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31112,
+    "Job Title": "Audiologists and speech-language pathologists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31120,
+    "Job Title": "Pharmacists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31121,
+    "Job Title": "Dietitians and nutritionists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31200,
+    "Job Title": "Psychologists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31201,
+    "Job Title": "Chiropractors"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31202,
+    "Job Title": "Physiotherapists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31203,
+    "Job Title": "Occupational therapists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31204,
+    "Job Title": "Kinesiologists and other professional occupations in therapy and assessment"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31209,
+    "Job Title": "Other professional occupations in health diagnosing and treating"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31300,
+    "Job Title": "Nursing coordinators and supervisors"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31301,
+    "Job Title": "Registered nurses and registered psychiatric nurses"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31302,
+    "Job Title": "Nurse practitioners"
+  },
+  {
+    "TEER": 1,
+    "NOC": 31303,
+    "Job Title": "Physician assistants, midwives and allied health professionals"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41100,
+    "Job Title": "Judges"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41101,
+    "Job Title": "Lawyers and Quebec notaries"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41200,
+    "Job Title": "University professors and lecturers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41201,
+    "Job Title": "Post-secondary teaching and research assistants"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41210,
+    "Job Title": "College and other vocational instructors"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41220,
+    "Job Title": "Secondary school teachers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41221,
+    "Job Title": "Elementary school and kindergarten teachers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41300,
+    "Job Title": "Social workers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41301,
+    "Job Title": "Therapists in counselling and related specialized therapies"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41302,
+    "Job Title": "Religious leaders"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41310,
+    "Job Title": "Police investigators and other investigative occupations"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41311,
+    "Job Title": "Probation and parole officers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41320,
+    "Job Title": "Educational counsellors"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41321,
+    "Job Title": "Career development practitioners and career counsellors (except education)"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41400,
+    "Job Title": "Natural and applied science policy researchers, consultants and program officers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41401,
+    "Job Title": "Economists and economic policy researchers and analysts"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41402,
+    "Job Title": "Business development officers and market researchers and analysts"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41403,
+    "Job Title": "Social policy researchers, consultants and program officers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41404,
+    "Job Title": "Health policy researchers, consultants and program officers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41405,
+    "Job Title": "Education policy researchers, consultants and program officers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41406,
+    "Job Title": "Recreation, sports and fitness policy researchers, consultants and program officers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41407,
+    "Job Title": "Program officers unique to government"
+  },
+  {
+    "TEER": 1,
+    "NOC": 41409,
+    "Job Title": "Other professional occupations in social science"
+  },
+  {
+    "TEER": 1,
+    "NOC": 51100,
+    "Job Title": "Librarians"
+  },
+  {
+    "TEER": 1,
+    "NOC": 51101,
+    "Job Title": "Conservators and curators"
+  },
+  {
+    "TEER": 1,
+    "NOC": 51102,
+    "Job Title": "Archivists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 51110,
+    "Job Title": "Editors"
+  },
+  {
+    "TEER": 1,
+    "NOC": 51111,
+    "Job Title": "Authors and writers (except technical)"
+  },
+  {
+    "TEER": 1,
+    "NOC": 51112,
+    "Job Title": "Technical writers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 51113,
+    "Job Title": "Journalists"
+  },
+  {
+    "TEER": 1,
+    "NOC": 51114,
+    "Job Title": "Translators, terminologists and interpreters"
+  },
+  {
+    "TEER": 1,
+    "NOC": 51120,
+    "Job Title": "Producers, directors, choreographers and related occupations"
+  },
+  {
+    "TEER": 1,
+    "NOC": 51121,
+    "Job Title": "Conductors, composers and arrangers"
+  },
+  {
+    "TEER": 1,
+    "NOC": 51122,
+    "Job Title": "Musicians and singers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12010,
+    "Job Title": "Supervisors, general office and administrative support workers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12011,
+    "Job Title": "Supervisors, finance and insurance office workers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12012,
+    "Job Title": "Supervisors, library, correspondence and related information workers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12013,
+    "Job Title": "Supervisors, supply chain, tracking and scheduling coordination occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12100,
+    "Job Title": "Executive assistants"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12101,
+    "Job Title": "Human resources and recruitment officers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12102,
+    "Job Title": "Procurement and purchasing agents and officers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12103,
+    "Job Title": "Conference and event planners"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12104,
+    "Job Title": "Employment insurance and revenue officers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12110,
+    "Job Title": "Court reporters, medical transcriptionists and related occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12111,
+    "Job Title": "Health information management occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12010,
+    "Job Title": "Supervisors, general office and administrative support workers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12011,
+    "Job Title": "Supervisors, finance and insurance office workers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12100,
+    "Job Title": "Executive assistants"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12101,
+    "Job Title": "Human resources and recruitment officers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12102,
+    "Job Title": "Procurement and purchasing agents and officers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12103,
+    "Job Title": "Conference and event planners"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12104,
+    "Job Title": "Employment insurance and revenue officers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12110,
+    "Job Title": "Court reporters, medical transcriptionists and related occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12111,
+    "Job Title": "Health information management occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12112,
+    "Job Title": "Records management technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12113,
+    "Job Title": "Statistical officers and related research support occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12200,
+    "Job Title": "Accounting technicians and bookkeepers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12201,
+    "Job Title": "Insurance adjusters and claims examiners"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12202,
+    "Job Title": "Insurance underwriters"
+  },
+  {
+    "TEER": 2,
+    "NOC": 12203,
+    "Job Title": "Assessors, business valuators and appraisers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22100,
+    "Job Title": "Chemical technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22101,
+    "Job Title": "Geological and mineral technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22110,
+    "Job Title": "Biological technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22111,
+    "Job Title": "Agricultural and fish products inspectors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22112,
+    "Job Title": "Forestry technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22113,
+    "Job Title": "Conservation and fishery officers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22114,
+    "Job Title": "Landscape and horticulture technicians and specialists"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22210,
+    "Job Title": "Architectural technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22211,
+    "Job Title": "Industrial designers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22212,
+    "Job Title": "Drafting technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22213,
+    "Job Title": "Land survey technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22214,
+    "Job Title": "Technical occupations in geomatics and meteorology"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22220,
+    "Job Title": "Computer network and web technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22221,
+    "Job Title": "User support technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22222,
+    "Job Title": "Information systems testing technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22230,
+    "Job Title": "Non-destructive testers and inspectors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22231,
+    "Job Title": "Engineering inspectors and regulatory officers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22232,
+    "Job Title": "Occupational health and safety specialists"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22233,
+    "Job Title": "Construction inspectors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22300,
+    "Job Title": "Civil engineering technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22301,
+    "Job Title": "Mechanical engineering technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22302,
+    "Job Title": "Industrial engineering and manufacturing technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22303,
+    "Job Title": "Construction estimators"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22310,
+    "Job Title": "Electrical and electronics engineering technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22311,
+    "Job Title": "Electronic service technicians (household and business equipment)"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22312,
+    "Job Title": "Industrial instrument technicians and mechanics"
+  },
+  {
+    "TEER": 2,
+    "NOC": 22313,
+    "Job Title": "Aircraft instrument, electrical and avionics mechanics, technicians and inspectors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32100,
+    "Job Title": "Opticians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32101,
+    "Job Title": "Licensed practical nurses"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32102,
+    "Job Title": "Paramedical occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32103,
+    "Job Title": "Respiratory therapists, clinical perfusionists and cardiopulmonary technologists"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32104,
+    "Job Title": "Animal health technologists and veterinary technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32109,
+    "Job Title": "Other technical occupations in therapy and assessment"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32110,
+    "Job Title": "Denturists"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32111,
+    "Job Title": "Dental hygienists and dental therapists"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32112,
+    "Job Title": "Dental technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32120,
+    "Job Title": "Medical laboratory technologists"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32121,
+    "Job Title": "Medical radiation technologists"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32122,
+    "Job Title": "Medical sonographers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32123,
+    "Job Title": "Cardiology technologists and electrophysiological diagnostic technologists"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32124,
+    "Job Title": "Pharmacy technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32129,
+    "Job Title": "Other medical technologists and technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32200,
+    "Job Title": "Traditional Chinese medicine practitioners and acupuncturists"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32201,
+    "Job Title": "Massage therapists"
+  },
+  {
+    "TEER": 2,
+    "NOC": 32209,
+    "Job Title": "Other practitioners of natural healing"
+  },
+  {
+    "TEER": 2,
+    "NOC": 42100,
+    "Job Title": "Police officers (except commissioned)"
+  },
+  {
+    "TEER": 2,
+    "NOC": 42101,
+    "Job Title": "Firefighters"
+  },
+  {
+    "TEER": 2,
+    "NOC": 42102,
+    "Job Title": "Specialized members of the Canadian Armed Forces"
+  },
+  {
+    "TEER": 2,
+    "NOC": 42200,
+    "Job Title": "Paralegals and related occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 42201,
+    "Job Title": "Social and community service workers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 42202,
+    "Job Title": "Early childhood educators and assistants"
+  },
+  {
+    "TEER": 2,
+    "NOC": 42203,
+    "Job Title": "Instructors of persons with disabilities"
+  },
+  {
+    "TEER": 2,
+    "NOC": 42204,
+    "Job Title": "Religion workers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 52100,
+    "Job Title": "Library and public archive technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 52110,
+    "Job Title": "Film and video camera operators"
+  },
+  {
+    "TEER": 2,
+    "NOC": 52111,
+    "Job Title": "Graphic arts technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 52112,
+    "Job Title": "Broadcast technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 52113,
+    "Job Title": "Audio and video recording technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 52114,
+    "Job Title": "Announcers and other broadcasters"
+  },
+  {
+    "TEER": 2,
+    "NOC": 52119,
+    "Job Title": "Other technical and coordinating occupations in motion pictures, broadcasting and the performing arts"
+  },
+  {
+    "TEER": 2,
+    "NOC": 52120,
+    "Job Title": "Graphic designers and illustrators"
+  },
+  {
+    "TEER": 2,
+    "NOC": 52121,
+    "Job Title": "Interior designers and interior decorators"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62010,
+    "Job Title": "Retail sales supervisors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62020,
+    "Job Title": "Food service supervisors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62021,
+    "Job Title": "Executive housekeepers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62022,
+    "Job Title": "Accommodation, travel, tourism and related services supervisors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62023,
+    "Job Title": "Customer and information services supervisors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62024,
+    "Job Title": "Cleaning supervisors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62029,
+    "Job Title": "Other services supervisors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62100,
+    "Job Title": "Technical sales specialists - wholesale trade"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62101,
+    "Job Title": "Retail and wholesale buyers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62200,
+    "Job Title": "Chefs"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62201,
+    "Job Title": "Funeral directors and embalmers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 62202,
+    "Job Title": "Jewellers, jewellery and watch repairers and related occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72010,
+    "Job Title": "Contractors and supervisors, machining, metal forming, shaping and erecting trades and related occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72011,
+    "Job Title": "Contractors and supervisors, electrical trades and telecommunications occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72012,
+    "Job Title": "Contractors and supervisors, pipefitting trades"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72013,
+    "Job Title": "Contractors and supervisors, carpentry trades"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72014,
+    "Job Title": "Contractors and supervisors, other construction trades, installers, repairers and servicers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72020,
+    "Job Title": "Contractors and supervisors, mechanic trades"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72021,
+    "Job Title": "Contractors and supervisors, heavy equipment operator crews"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72022,
+    "Job Title": "Supervisors, printing and related occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72023,
+    "Job Title": "Supervisors, railway transport operations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72024,
+    "Job Title": "Supervisors, motor transport and other ground transit operators"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72025,
+    "Job Title": "Supervisors, mail and message distribution occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72100,
+    "Job Title": "Machinists and machining and tooling inspectors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72101,
+    "Job Title": "Tool and die makers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72102,
+    "Job Title": "Sheet metal workers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72103,
+    "Job Title": "Boilermakers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72104,
+    "Job Title": "Structural metal and platework fabricators and fitters"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72105,
+    "Job Title": "Ironworkers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72106,
+    "Job Title": "Welders and related machine operators"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72200,
+    "Job Title": "Electricians (except industrial and power system)"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72201,
+    "Job Title": "Industrial electricians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72202,
+    "Job Title": "Power system electricians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72203,
+    "Job Title": "Electrical power line and cable workers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72204,
+    "Job Title": "Telecommunications line and cable installers and repairers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72205,
+    "Job Title": "Telecommunications equipment installation and cable television service technicians"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72300,
+    "Job Title": "Plumbers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72301,
+    "Job Title": "Steamfitters, pipefitters and sprinkler system installers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72302,
+    "Job Title": "Gas fitters"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72310,
+    "Job Title": "Carpenters"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72311,
+    "Job Title": "Cabinetmakers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72320,
+    "Job Title": "Bricklayers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72321,
+    "Job Title": "Insulators"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72400,
+    "Job Title": "Construction millwrights and industrial mechanics"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72401,
+    "Job Title": "Heavy-duty equipment mechanics"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72402,
+    "Job Title": "Heating, refrigeration and air conditioning mechanics"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72403,
+    "Job Title": "Railway carmen/women"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72404,
+    "Job Title": "Aircraft mechanics and aircraft inspectors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72405,
+    "Job Title": "Machine fitters"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72406,
+    "Job Title": "Elevator constructors and mechanics"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72410,
+    "Job Title": "Automotive service technicians, truck and bus mechanics and mechanical repairers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72411,
+    "Job Title": "Auto body collision, refinishing and glass technicians and damage repair estimators"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72420,
+    "Job Title": "Oil and solid fuel heating mechanics"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72421,
+    "Job Title": "Appliance servicers and repairers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72422,
+    "Job Title": "Electrical mechanics"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72423,
+    "Job Title": "Motorcycle, all-terrain vehicle and other related mechanics"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72429,
+    "Job Title": "Other small engine and small equipment repairers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72500,
+    "Job Title": "Crane operators"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72501,
+    "Job Title": "Water well drillers"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72600,
+    "Job Title": "Air pilots, flight engineers and flying instructors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72601,
+    "Job Title": "Air traffic controllers and related occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72602,
+    "Job Title": "Deck officers, water transport"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72603,
+    "Job Title": "Engineer officers, water transport"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72604,
+    "Job Title": "Railway traffic controllers and marine traffic regulators"
+  },
+  {
+    "TEER": 2,
+    "NOC": 72999,
+    "Job Title": "Other technical trades and related occupations"
+  },
+  {
+    "TEER": 2,
+    "NOC": 82010,
+    "Job Title": "Supervisors, logging and forestry"
+  },
+  {
+    "TEER": 2,
+    "NOC": 82020,
+    "Job Title": "Supervisors, mining and quarrying"
+  },
+  {
+    "TEER": 2,
+    "NOC": 82021,
+    "Job Title": "Contractors and supervisors, oil and gas drilling and services"
+  },
+  {
+    "TEER": 2,
+    "NOC": 82030,
+    "Job Title": "Agricultural service contractors and farm supervisors"
+  },
+  {
+    "TEER": 2,
+    "NOC": 82031,
+    "Job Title": "Contractors and supervisors, landscaping, grounds maintenance and horticulture services"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92010,
+    "Job Title": "Supervisors, mineral and metal processing"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92011,
+    "Job Title": "Supervisors, petroleum, gas and chemical processing and utilities"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92012,
+    "Job Title": "Supervisors, food and beverage processing"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92013,
+    "Job Title": "Supervisors, plastic and rubber products manufacturing"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92014,
+    "Job Title": "Supervisors, forest products processing"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92015,
+    "Job Title": "Supervisors, textile, fabric, fur and leather products processing and manufacturing"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92020,
+    "Job Title": "Supervisors, motor vehicle assembling"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92021,
+    "Job Title": "Supervisors, electronics and electrical products manufacturing"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92022,
+    "Job Title": "Supervisors, furniture and fixtures manufacturing"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92023,
+    "Job Title": "Supervisors, other mechanical and metal products manufacturing"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92024,
+    "Job Title": "Supervisors, other products manufacturing and assembly"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92100,
+    "Job Title": "Power engineers and power systems operators"
+  },
+  {
+    "TEER": 2,
+    "NOC": 92101,
+    "Job Title": "Water and waste treatment plant operators"
+  },
+  {
+    "TEER": 3,
+    "NOC": 13100,
+    "Job Title": "Administrative officers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 13101,
+    "Job Title": "Property administrators"
+  },
+  {
+    "TEER": 3,
+    "NOC": 13102,
+    "Job Title": "Payroll administrators"
+  },
+  {
+    "TEER": 3,
+    "NOC": 13110,
+    "Job Title": "Administrative assistants"
+  },
+  {
+    "TEER": 3,
+    "NOC": 13111,
+    "Job Title": "Legal administrative assistants"
+  },
+  {
+    "TEER": 3,
+    "NOC": 13112,
+    "Job Title": "Medical administrative assistants"
+  },
+  {
+    "TEER": 3,
+    "NOC": 13200,
+    "Job Title": "Customs, ship and other brokers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 13201,
+    "Job Title": "Production and transportation logistics coordinators"
+  },
+  {
+    "TEER": 3,
+    "NOC": 33100,
+    "Job Title": "Dental assistants and dental laboratory assistants"
+  },
+  {
+    "TEER": 3,
+    "NOC": 33101,
+    "Job Title": "Medical laboratory assistants and related technical occupations"
+  },
+  {
+    "TEER": 3,
+    "NOC": 33102,
+    "Job Title": "Nurse aides, orderlies and patient service associates"
+  },
+  {
+    "TEER": 3,
+    "NOC": 33103,
+    "Job Title": "Pharmacy technical assistants and pharmacy assistants"
+  },
+  {
+    "TEER": 3,
+    "NOC": 33109,
+    "Job Title": "Other assisting occupations in support of health services"
+  },
+  {
+    "TEER": 3,
+    "NOC": 43100,
+    "Job Title": "Elementary and secondary school teacher assistants"
+  },
+  {
+    "TEER": 3,
+    "NOC": 43109,
+    "Job Title": "Other instructors"
+  },
+  {
+    "TEER": 3,
+    "NOC": 43200,
+    "Job Title": "Sheriffs and bailiffs"
+  },
+  {
+    "TEER": 3,
+    "NOC": 43201,
+    "Job Title": "Correctional service officers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 43202,
+    "Job Title": "By-law enforcement and other regulatory officers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 43203,
+    "Job Title": "Border services, customs, and immigration officers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 43204,
+    "Job Title": "Operations members of the Canadian Armed Forces"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53100,
+    "Job Title": "Registrars, restorers, interpreters and other occupations related to museum and art galleries"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53110,
+    "Job Title": "Photographers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53111,
+    "Job Title": "Motion pictures, broadcasting, photography and performing arts assistants and operators"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53120,
+    "Job Title": "Dancers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53121,
+    "Job Title": "Actors, comedians and circus performers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53122,
+    "Job Title": "Painters, sculptors and other visual artists"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53123,
+    "Job Title": "Theatre, fashion, exhibit and other creative designers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53124,
+    "Job Title": "Artisans and craftspersons"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53125,
+    "Job Title": "Patternmakers - textile, leather and fur products"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53200,
+    "Job Title": "Athletes"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53201,
+    "Job Title": "Coaches"
+  },
+  {
+    "TEER": 3,
+    "NOC": 53202,
+    "Job Title": "Sports officials and referees"
+  },
+  {
+    "TEER": 3,
+    "NOC": 63100,
+    "Job Title": "Insurance agents and brokers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 63101,
+    "Job Title": "Real estate agents and salespersons"
+  },
+  {
+    "TEER": 3,
+    "NOC": 63102,
+    "Job Title": "Financial sales representatives"
+  },
+  {
+    "TEER": 3,
+    "NOC": 63200,
+    "Job Title": "Cooks"
+  },
+  {
+    "TEER": 3,
+    "NOC": 63201,
+    "Job Title": "Butchers - retail and wholesale"
+  },
+  {
+    "TEER": 3,
+    "NOC": 63202,
+    "Job Title": "Bakers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 63210,
+    "Job Title": "Hairstylists and barbers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 63211,
+    "Job Title": "Estheticians, electrologists and related occupations"
+  },
+  {
+    "TEER": 3,
+    "NOC": 63220,
+    "Job Title": "Shoe repairers and shoemakers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 63221,
+    "Job Title": "Upholsterers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73100,
+    "Job Title": "Concrete finishers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73101,
+    "Job Title": "Tilesetters"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73102,
+    "Job Title": "Plasterers, drywall installers and finishers and lathers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73110,
+    "Job Title": "Roofers and shinglers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73111,
+    "Job Title": "Glaziers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73112,
+    "Job Title": "Painters and decorators (except interior decorators)"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73113,
+    "Job Title": "Floor covering installers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73200,
+    "Job Title": "Residential and commercial installers and servicers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73201,
+    "Job Title": "General building maintenance workers and building superintendents"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73202,
+    "Job Title": "Pest controllers and fumigators"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73209,
+    "Job Title": "Other repairers and servicers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73300,
+    "Job Title": "Transport truck drivers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73301,
+    "Job Title": "Bus drivers, subway operators and other transit operators"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73310,
+    "Job Title": "Railway and yard locomotive engineers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73311,
+    "Job Title": "Railway conductors and brakemen/women"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73400,
+    "Job Title": "Heavy equipment operators"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73401,
+    "Job Title": "Printing press operators"
+  },
+  {
+    "TEER": 3,
+    "NOC": 73402,
+    "Job Title": "Drillers and blasters - surface mining, quarrying and construction"
+  },
+  {
+    "TEER": 3,
+    "NOC": 83100,
+    "Job Title": "Underground production and development miners"
+  },
+  {
+    "TEER": 3,
+    "NOC": 83101,
+    "Job Title": "Oil and gas well drillers, servicers, testers and related workers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 83110,
+    "Job Title": "Logging machinery operators"
+  },
+  {
+    "TEER": 3,
+    "NOC": 83120,
+    "Job Title": "Fishing masters and officers"
+  },
+  {
+    "TEER": 3,
+    "NOC": 83121,
+    "Job Title": "Fishermen/women"
+  },
+  {
+    "TEER": 3,
+    "NOC": 93100,
+    "Job Title": "Central control and process operators, mineral and metal processing"
+  },
+  {
+    "TEER": 3,
+    "NOC": 93101,
+    "Job Title": "Central control and process operators, petroleum, gas and chemical processing"
+  },
+  {
+    "TEER": 3,
+    "NOC": 93102,
+    "Job Title": "Pulping, papermaking and coating control operators"
+  },
+  {
+    "TEER": 3,
+    "NOC": 93200,
+    "Job Title": "Aircraft assemblers and aircraft assembly inspectors"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14100,
+    "Job Title": "General office support workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14101,
+    "Job Title": "Receptionists"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14102,
+    "Job Title": "Personnel clerks"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14103,
+    "Job Title": "Court clerks and related court services occupations"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14110,
+    "Job Title": "Survey interviewers and statistical clerks"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14111,
+    "Job Title": "Data entry clerks"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14112,
+    "Job Title": "Desktop publishing operators and related occupations"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14200,
+    "Job Title": "Accounting and related clerks"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14201,
+    "Job Title": "Banking, insurance and other financial clerks"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14202,
+    "Job Title": "Collection clerks"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14300,
+    "Job Title": "Library assistants and clerks"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14301,
+    "Job Title": "Correspondence, publication and regulatory clerks"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14400,
+    "Job Title": "Shippers and receivers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14401,
+    "Job Title": "Storekeepers and partspersons"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14402,
+    "Job Title": "Production logistics workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14403,
+    "Job Title": "Purchasing and inventory control workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14404,
+    "Job Title": "Dispatchers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 14405,
+    "Job Title": "Transportation route and crew schedulers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 44100,
+    "Job Title": "Home child Caregivers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 44101,
+    "Job Title": "Home support workers, caregivers and related occupations"
+  },
+  {
+    "TEER": 4,
+    "NOC": 44200,
+    "Job Title": "Primary combat members of the Canadian Armed Forces"
+  },
+  {
+    "TEER": 4,
+    "NOC": 54100,
+    "Job Title": "Program leaders and instructors in recreation, sport and fitness"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64100,
+    "Job Title": "Retail salespersons and visual merchandisers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64101,
+    "Job Title": "Sales and account representatives - wholesale trade (non-technical)"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64200,
+    "Job Title": "Tailors, dressmakers, furriers and milliners"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64201,
+    "Job Title": "Image, social and other personal consultants"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64300,
+    "Job Title": "Maîtres d'hôtel and hosts/hostesses"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64301,
+    "Job Title": "Bartenders"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64310,
+    "Job Title": "Travel counsellors"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64311,
+    "Job Title": "Pursers and flight attendants"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64312,
+    "Job Title": "Airline ticket and service agents"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64313,
+    "Job Title": "Ground and water transport ticket agents, cargo service representatives and related clerks"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64314,
+    "Job Title": "Hotel front desk clerks"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64320,
+    "Job Title": "Tour and travel guides"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64321,
+    "Job Title": "Casino workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64322,
+    "Job Title": "Outdoor sport and recreational guides"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64400,
+    "Job Title": "Customer services representatives - financial institutions"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64401,
+    "Job Title": "Postal services representatives"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64409,
+    "Job Title": "Other customer and information services representatives"
+  },
+  {
+    "TEER": 4,
+    "NOC": 64410,
+    "Job Title": "Security guards and related security service occupations"
+  },
+  {
+    "TEER": 4,
+    "NOC": 74100,
+    "Job Title": "Mail and parcel sorters and related occupations"
+  },
+  {
+    "TEER": 4,
+    "NOC": 74101,
+    "Job Title": "Letter carriers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 74102,
+    "Job Title": "Couriers and messengers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 74200,
+    "Job Title": "Railway yard and track maintenance workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 74201,
+    "Job Title": "Water transport deck and engine room crew"
+  },
+  {
+    "TEER": 4,
+    "NOC": 74202,
+    "Job Title": "Air transport ramp attendants"
+  },
+  {
+    "TEER": 4,
+    "NOC": 74203,
+    "Job Title": "Automotive and heavy truck and equipment parts installers and servicers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 74204,
+    "Job Title": "Utility maintenance workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 74205,
+    "Job Title": "Public works maintenance equipment operators and related workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 84100,
+    "Job Title": "Underground mine service and support workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 84101,
+    "Job Title": "Oil and gas well drilling and related workers and services operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 84110,
+    "Job Title": "Chain saw and skidder operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 84111,
+    "Job Title": "Silviculture and forestry workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 84120,
+    "Job Title": "Specialized livestock workers and farm machinery operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 84121,
+    "Job Title": "Fishing vessel deckhands"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94100,
+    "Job Title": "Machine operators, mineral and metal processing"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94101,
+    "Job Title": "Foundry workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94102,
+    "Job Title": "Glass forming and finishing machine operators and glass cutters"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94103,
+    "Job Title": "Concrete, clay and stone forming operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94104,
+    "Job Title": "Inspectors and testers, mineral and metal processing"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94105,
+    "Job Title": "Metalworking and forging machine operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94106,
+    "Job Title": "Machining tool operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94107,
+    "Job Title": "Machine operators of other metal products"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94110,
+    "Job Title": "Chemical plant machine operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94111,
+    "Job Title": "Plastics processing machine operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94112,
+    "Job Title": "Rubber processing machine operators and related workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94120,
+    "Job Title": "Sawmill machine operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94121,
+    "Job Title": "Pulp mill, papermaking and finishing machine operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94122,
+    "Job Title": "Paper converting machine operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94123,
+    "Job Title": "Lumber graders and other wood processing inspectors and graders"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94124,
+    "Job Title": "Woodworking machine operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94129,
+    "Job Title": "Other wood processing machine operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94130,
+    "Job Title": "Textile fibre and yarn, hide and pelt processing machine operators and workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94131,
+    "Job Title": "Weavers, knitters and other fabric making occupations"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94132,
+    "Job Title": "Industrial sewing machine operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94133,
+    "Job Title": "Inspectors and graders, textile, fabric, fur and leather products manufacturing"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94140,
+    "Job Title": "Process control and machine operators, food and beverage processing"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94141,
+    "Job Title": "Industrial butchers and meat cutters, poultry preparers and related workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94142,
+    "Job Title": "Fish and seafood plant workers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94143,
+    "Job Title": "Testers and graders, food and beverage processing"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94150,
+    "Job Title": "Plateless printing equipment operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94151,
+    "Job Title": "Camera, platemaking and other prepress occupations"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94152,
+    "Job Title": "Binding and finishing machine operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94153,
+    "Job Title": "Photographic and film processors"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94200,
+    "Job Title": "Motor vehicle assemblers, inspectors and testers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94201,
+    "Job Title": "Electronics assemblers, fabricators, inspectors and testers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94202,
+    "Job Title": "Assemblers and inspectors, electrical appliance, apparatus and equipment manufacturing"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94203,
+    "Job Title": "Assemblers, fabricators and inspectors, industrial electrical motors and transformers"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94204,
+    "Job Title": "Mechanical assemblers and inspectors"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94205,
+    "Job Title": "Machine operators and inspectors, electrical apparatus manufacturing"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94210,
+    "Job Title": "Furniture and fixture assemblers, finishers, refinishers and inspectors"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94211,
+    "Job Title": "Assemblers and inspectors of other wood products"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94212,
+    "Job Title": "Plastic products assemblers, finishers and inspectors"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94213,
+    "Job Title": "Industrial painters, coaters and metal finishing process operators"
+  },
+  {
+    "TEER": 4,
+    "NOC": 94219,
+    "Job Title": "Other products assemblers, finishers and inspectors"
+  },
+  {
+    "TEER": 5,
+    "NOC": 45100,
+    "Job Title": "Student monitors, crossing guards and related occupations"
+  },
+  {
+    "TEER": 5,
+    "NOC": 55109,
+    "Job Title": "Other performers"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65100,
+    "Job Title": "Cashiers"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65101,
+    "Job Title": "Service station attendants"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65102,
+    "Job Title": "Store shelf stockers, clerks and order fillers"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65109,
+    "Job Title": "Other sales related occupations"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65200,
+    "Job Title": "Food and beverage servers"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65201,
+    "Job Title": "Food counter attendants, kitchen helpers and related support occupations"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65202,
+    "Job Title": "Meat cutters and fishmongers - retail and wholesale"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65210,
+    "Job Title": "Support occupations in accommodation, travel and facilities set-up services"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65211,
+    "Job Title": "Operators and attendants in amusement, recreation and sport"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65220,
+    "Job Title": "Pet groomers and animal care workers"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65229,
+    "Job Title": "Other support occupations in personal services"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65310,
+    "Job Title": "Light duty cleaners"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65311,
+    "Job Title": "Specialized cleaners"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65312,
+    "Job Title": "Janitors, caretakers and heavy-duty cleaners"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65320,
+    "Job Title": "Dry cleaning, laundry and related occupations"
+  },
+  {
+    "TEER": 5,
+    "NOC": 65329,
+    "Job Title": "Other service support occupations"
+  },
+  {
+    "TEER": 5,
+    "NOC": 75100,
+    "Job Title": "Longshore workers"
+  },
+  {
+    "TEER": 5,
+    "NOC": 75101,
+    "Job Title": "Material handlers"
+  },
+  {
+    "TEER": 5,
+    "NOC": 75110,
+    "Job Title": "Construction trades helpers and labourers"
+  },
+  {
+    "TEER": 5,
+    "NOC": 75119,
+    "Job Title": "Other trades helpers and labourers"
+  },
+  {
+    "TEER": 5,
+    "NOC": 75200,
+    "Job Title": "Taxi and limousine drivers and chauffeurs"
+  },
+  {
+    "TEER": 5,
+    "NOC": 75201,
+    "Job Title": "Delivery service drivers and door-to-door distributors"
+  },
+  {
+    "TEER": 5,
+    "NOC": 75210,
+    "Job Title": "Boat and cable ferry operators and related occupations"
+  }
+]

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ImmiMate | Chat</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-logo">ImmiMate</div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="chat.html" class="active">Chat</a>
+    </div>
+    <div class="auth-buttons">
+        <a href="log-in.html" class="sign-in">Sign In</a>
+        <a href="sign-up.html" class="sign-up">Sign Up</a>
+    </div>
+  </nav>
+  
+  <div class="hero-section">
+    <!-- Left: Text -->
+    <div class="hero-text">
+        <h1>Empower Your Journey to <br> Canadian Permanent Residency</h1>
+        <p>Unlock personalized immigration guidance, program analysis, and actionable steps with our AI-driven agent.</p>
+        <div class="hero-buttons">
+            <button class="btn-primary">
+                Enroll Now
+                <span>→</span> <!-- Arrow Icon -->
+            </button>
+            <button class="btn-secondary">
+                <span>ℹ️</span> Learn More <!-- Info Icon -->
+            </button>
+        </div>
+    </div>
+
+  <!-- Main Chat Section -->
+  <main class="chat-container">
+    <!-- Chat Window -->
+    <div id="chat-window" class="chat-window">
+      <!-- Sample Bot Message -->
+      <div class="message bot-message">
+        Hello, I'm your Immigration Mate. How can I help you today?
+      </div>
+    </div>
+
+    <!-- Chat Input -->
+    <div class="input-container">
+      <input
+        type="text"
+        id="user-input"
+        class="chat-input"
+        placeholder="Type your message..."
+      />
+      <button id="send-btn" class="btn send-btn">Send</button>
+    </div>
+  </main>
+
+  <script src="../JavaScript/app.js"></script>
+</body>
+</html>
