@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/immimate_test
+    username: admin  # Hardcoded username for the test database
+    password: Godiguis12 #Hardcoded password for the test database
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # Changed from create-drop to update to prevent dropping tables
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Enable transaction management for tests
+  test:
+    database:
+      replace: none  # Don't replace the DataSource bean
+
+  logging:
+    level:
+      org.hibernate.SQL: debug
+      org.hibernate.type.descriptor.sql.BasicBinder: trace
+
+# JWT Configuration for tests
+jwt:
+  secret: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpbW1pbWF0ZWNhbmFkYUBnbWFpbC5jb20iLCJleHAiOjE3MzkyMjc5NDR9.GQfe1JEukc92rbxdEicD-fKFS06uiy-5s4r-AcowOHw
+  expiration: 86400000  # 24 hours in milliseconds
