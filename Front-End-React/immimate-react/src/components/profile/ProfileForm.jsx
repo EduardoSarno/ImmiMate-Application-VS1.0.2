@@ -1,10 +1,15 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm, Controller } from 'react-hook-form';
+import axios from 'axios'; // Add axios import
+import useFormDraft from '../../hooks/useFormDraft';
 import { useAuth } from '../../contexts/AuthContext';
+import apiService from '../../services/ApiService';
+import Logger from '../../utils/LoggingService';
+import Select from 'react-select';
 
 // Import validation
+// eslint-disable-next-line no-unused-vars
 import { validateProfileForm } from '../../validation/ProfileValidation';
 
 // Import styles
@@ -12,12 +17,137 @@ import '../../styles/ProfileForm.css';
 import '../../styles/FormPage.css';
 
 // Import utils
-import { getScoreOptions, convertToCLB, getScoreRangeDescription } from '../../utils/LanguageTestConverter';
+import useLanguageTestConverter, { getScoreRangeDescription } from '../../hooks/useLanguageTestConverter';
 
 // Import components
 import FormSummaryModal from './FormSummaryModal';
 
+// Replace the ValidationSummary component to use existing CSS classes
+const ValidationSummary = ({ isOpen, onClose, errors, scrollToSection }) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-header error-display">
+          <h3>Validation Errors</h3>
+          <button className="close-button" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          <p>Please fix the following issues before submitting your profile:</p>
+          <ul className="error-list">
+            {errors.map((error, index) => (
+              <li 
+                key={index} 
+                className="error-item"
+                onClick={() => {
+                  onClose();
+                  scrollToSection(error.sectionId);
+                }}
+              >
+                <span>{error.message}</span>
+                <small>(Click to navigate to this section)</small>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="modal-footer">
+          <button className="btn-primary" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Map section IDs to readable names (moved outside component to avoid duplication)
+const sectionNames = {
+  'personal-info': 'Personal Information',
+  'education': 'Education',
+  'language': 'Language Proficiency',
+  'secondary-language': 'Secondary Language',
+  'work-experience': 'Work Experience',
+  'spouse': 'Spouse / Partner',
+  'job-offer': 'Job Offer',
+  'provincial': 'Provincial Nomination',
+  'additional': 'Additional Information'
+};
+
 const ProfileForm = () => {
+  // Configuration
+  // const API_BASE_URL = 'http://localhost:8080/api'; // No longer needed - using apiService
+  
+  // Use the formDraft hook for automatic saving and loading
+  const {
+    formData,
+    // eslint-disable-next-line no-unused-vars
+    loadDraft, // Keeping for future use but currently handled by the hook internally
+    saveDraft,
+    discardDraft,
+    isLoading: isDraftLoading,
+    isSaving,
+    saveStatus,
+    // eslint-disable-next-line no-unused-vars
+    draftError, // Keeping for potential error handling improvements
+    hasUnsavedChanges,
+    updateFormData,
+  } = useFormDraft({
+    formId: 'profile-form',
+    initialData: {},
+    autoSaveInterval: 30000, // 30 seconds
+    enabled: true,
+    expirationHours: 24 // Keep draft data for 24 hours (1 day)
+  });
+  
+  // Add the language test converter hook at the top level
+  const { 
+    convertToCLB, 
+    areSameLanguage, 
+    getSecondaryTestOptions,
+    getScoreOptions
+  } = useLanguageTestConverter();
+
+  // State for the form sections
+  const [openSections, setOpenSections] = useState({
+    'personal-info': true,
+    'language': false,
+    'secondary-language': false,
+    'education': false,
+    'work': false,
+    'spouse': false,
+    'canada-connection': false,
+    'additional-info': false
+  });
+  
+  // State for info blocks to track which ones are open
+  const [openInfoBlocks, setOpenInfoBlocks] = useState({
+    'age-info': true,
+    'education-level-info': true,
+    'study-canada-info': true,
+    'language-requirements-info': true,
+    'secondary-language-info': true,
+    'partner-language-info': true,
+    'canadian-work-info': true,
+    'foreign-work-info': true,
+    'trades-certification-info': true,
+    'partner-education-info': true,
+    'partner-work-info': true,
+    'job-offer-info': true,
+    'noc-teer-info': true,
+    'provincial-nomination-info': true,
+    'canadian-relatives-info': true,
+    'ita-info': true,
+    'preferred-destination-info': true,
+    'settlement-funds-info': true
+  });
+  
+  // Wrapper function for score options to maintain backward compatibility
+  const getTestScoreOptions = useCallback((testType, skill) => {
+    // Simply delegate to the hook's function
+    return getScoreOptions(testType, skill);
+  }, [getScoreOptions]);
+  
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -26,58 +156,79 @@ const ProfileForm = () => {
 
   // Debug Auth Token
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-      console.warn('DEBUG: No access_token found in localStorage');
+    // Using cookies now, so we don't need to check localStorage for tokens
+    // Just check if we have a currentUser instead
+    if (!currentUser) {
+      Logger.warn('DEBUG: No authenticated user found');
     } else {
-      console.log('DEBUG: Found access_token in localStorage');
-      // Log the first 10 characters of the token (safe to log partial token)
-      console.log('DEBUG: Token starts with:', token.substring(0, 10) + '...');
-      
-      try {
-        // Check if token is JWT format (has 3 parts separated by dots)
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          console.log('DEBUG: Token appears to be in JWT format');
-        } else {
-          console.warn('DEBUG: Token does not appear to be in JWT format');
-        }
-      } catch (err) {
-        console.error('DEBUG: Error analyzing token:', err);
-      }
+      Logger.debug('DEBUG: User authenticated:', currentUser.email);
     }
     
-    // Check other auth-related items in localStorage
-    console.log('DEBUG: user_email in localStorage:', localStorage.getItem('user_email'));
-    console.log('DEBUG: user_id in localStorage:', localStorage.getItem('user_id'));
-    console.log('DEBUG: currentUser object:', currentUser);
+    // Also log user email and ID
+    Logger.debug('DEBUG: user_email in localStorage:', localStorage.getItem('user_email'));
+    Logger.debug('DEBUG: user_id in localStorage:', localStorage.getItem('user_id'));
+    Logger.debug('DEBUG: currentUser object:', currentUser);
   }, [currentUser]);
 
+  // Check authentication state
+  useEffect(() => {
+    if (!currentUser) {
+      // If not authenticated, redirect to login
+      Logger.warn('ProfileForm: No authenticated user found, redirecting to login');
+      navigate('/login');
+    }
+  }, [currentUser, navigate]);
+
+  // Fetch CSRF token on component mount
+  useEffect(() => {
+    // Fetch CSRF token when component mounts
+    // Add a flag to ensure we only fetch once
+    let hasFetchedToken = false;
+    
+    const fetchCsrfToken = async () => {
+      // Prevent multiple fetches
+      if (hasFetchedToken) return;
+      
+      try {
+        hasFetchedToken = true;
+        
+        // Only fetch CSRF token if user is authenticated
+        if (currentUser) {
+          await apiService.fetchCsrfToken();
+          Logger.debug('CSRF token fetched during component initialization');
+        } else {
+          Logger.debug('Skipping CSRF token fetch - user not authenticated');
+        }
+      } catch (error) {
+        // Don't set hasFetchedToken back to false on errors
+        // to prevent infinite retry loops
+        Logger.error('Failed to fetch CSRF token during initialization:', error);
+      }
+    };
+    
+    fetchCsrfToken();
+    
+    // Cleanup function to cancel any pending operations
+    return () => {
+      hasFetchedToken = true; // Prevent further fetches during unmount
+    };
+  }, [currentUser]); // Only re-run if currentUser changes
+
   // --------------------- STATE MANAGEMENT --------------------- //
-  const [progressValue, setProgressValue] = useState(0);
   const [formErrors, setFormErrors] = useState([]);
-  const [validationSummary, setValidationSummary] = useState(null);
+  const [validationSummary, setValidationSummary] = useState({
+    showSummary: false,
+    errors: []
+  });
   const [apiResponse, setApiResponse] = useState(null);
   const [apiError, setApiError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasSubmittedProfile, setHasSubmittedProfile] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [tempFormData, setTempFormData] = useState(null);
-
-  // Track which sections are open
-  const [openSections, setOpenSections] = useState({
-    'personal-info': true,
-    'education': false,
-    'language': false,
-    'secondary-language': false,
-    'work-experience': false,
-    'spouse': false,
-    'job-offer': false,
-    'provincial': false,
-    'additional': false
-  });
+  // eslint-disable-next-line no-unused-vars
+  const [progressValue, setProgressValue] = useState(0);
 
   // Calculate section completion status
   const [sectionStatus, setSectionStatus] = useState({
@@ -92,16 +243,38 @@ const ProfileForm = () => {
     'additional': { complete: false, active: false, hasErrors: false, touched: false }
   });
 
-  // --------------------- LOCALSTORAGE: LOAD DEFAULTS --------------------- //
-  const loadSavedData = () => {
+  // Replace localStorage functions with useFormDraft methods
+  const loadSavedData = useCallback(() => {
+    // Form data is already loaded by the useFormDraft hook
     try {
-      const saved = localStorage.getItem('immigrationFormData');
-      return saved ? JSON.parse(saved) : {};
+      // Fetch CSRF token separately
+      apiService.fetchCsrfToken()
+        .then(() => Logger.debug('CSRF token fetched during form initialization'))
+        .catch(err => Logger.error('Error fetching CSRF token:', err));
+      
+      // Return form data from the hook - must return synchronously
+      return formData || {};
     } catch (err) {
-      console.error('Error parsing saved form data:', err);
+      Logger.error('Error loading saved form data:', err);
       return {};
     }
-  };
+  }, [formData]);
+
+  // eslint-disable-next-line no-unused-vars
+  const saveData = useCallback((data) => {
+    // Ensure data is what we expect
+    Logger.debug('Saving form data, fullName value:', data.fullName);
+    
+    // Only update if the data has actually changed
+    const dataStr = JSON.stringify(data);
+    const formDataStr = JSON.stringify(formData);
+    
+    if (dataStr !== formDataStr) {
+      updateFormData(data);
+      saveDraft(); // Trigger manual save for immediate persistence
+      Logger.debug('Form data updated and saved via draft service');
+    }
+  }, [updateFormData, saveDraft, formData]);
 
   // --------------------- REACT HOOK FORM --------------------- //
   const {
@@ -110,7 +283,12 @@ const ProfileForm = () => {
     watch,
     // eslint-disable-next-line no-unused-vars
     setValue, // Used for programmatically setting form values
-    formState: { errors }
+    formState: { errors },
+    // eslint-disable-next-line no-unused-vars
+    getValues,
+    reset,
+    clearErrors,
+    control
   } = useForm({
     defaultValues: loadSavedData()
     // If using a Yup schema, you can do: resolver: yupResolver(validationSchema)
@@ -118,6 +296,291 @@ const ProfileForm = () => {
 
   // Watch all fields for localStorage + progress bar
   const watchAllFields = watch();
+
+  // Keep track of whether we're in the middle of a reset operation
+  const justResetRef = useRef(false);
+  // Keep track of last saved data to prevent unnecessary updates
+  const lastSavedDataRef = useRef({});
+
+  // Reset form with draft data when it's loaded
+  useEffect(() => {
+    if (!isDraftLoading && formData) {
+      // Check if the form data is actually different from what's already in the form
+      const currentFormData = getValues();
+      const formDataStr = JSON.stringify(formData);
+      const currentFormDataStr = JSON.stringify(currentFormData);
+      
+      if (formDataStr !== currentFormDataStr) {
+        Logger.debug('Resetting form with loaded draft data', {
+          formId: 'profile-form',
+          fieldsCount: Object.keys(formData).length,
+          hasJobOffer: formData.jobOffer ? 'Yes' : 'No',
+          timestamp: new Date().toISOString()
+        });
+        
+        // Set the flag to indicate we're resetting
+        justResetRef.current = true;
+        reset(formData);
+        
+        // Clear the flag after a short delay
+        setTimeout(() => {
+          justResetRef.current = false;
+        }, 300);
+      }
+    }
+  }, [isDraftLoading, formData, reset, getValues]);
+
+  // Save form data when fields change
+  useEffect(() => {
+    // Skip initial render and only save if form has been loaded
+    if (isDraftLoading) return;
+    
+    // Avoid saving if we just reset the form
+    if (justResetRef.current) return;
+    
+    // Check if watchAllFields has actually changed since last save
+    const watchAllFieldsStr = JSON.stringify(watchAllFields);
+    const lastSavedStr = JSON.stringify(lastSavedDataRef.current);
+    
+    if (watchAllFieldsStr === lastSavedStr) return;
+    
+    // Add a small delay to avoid too frequent saves
+    const timer = setTimeout(() => {
+      // Use the saveData function to update formData in the draft hook
+      Logger.debug('Form fields changed, saving draft data');
+      saveData(watchAllFields);
+      // Update our reference to the last saved data
+      lastSavedDataRef.current = {...watchAllFields};
+    }, 1000); // 1000ms (1 second) debounce
+    
+    return () => clearTimeout(timer);
+  }, [watchAllFields, saveData, isDraftLoading]);
+
+  // Watch specific fields to automatically clean others when they change
+  const watchMaritalStatus = watch('applicantMaritalStatus');
+  const watchJobOffer = watch('jobOffer');
+  const watchTookSecondaryLanguage = watch('tookSecondaryLanguageTest');
+  const watchEducationInCanada = watch('eduInCanada');
+  const watchHasProvincialNomination = watch('hasProvincialNomination');
+  const watchHasCanadianRelatives = watch('hasCanadianRelatives');
+  const watchForeignWorkExperience = watch('foreignExp');
+  const watchPrimaryLanguageTest = watch('primaryLanguageTest');
+  const watchSpouseIsPR = watch('spouseIsPR');
+  const watchSpouseIsAccompanying = watch('spouseIsAccompanying');
+  
+  const watchApplicantAge = watch('applicantAge');
+  const watchSettlementFunds = watch('settlementFunds');
+  // We now use watchAllFields.jobWage directly in the validation effect
+  // const watchJobOfferWage = watch('jobOfferWage');
+  // Use useMemo for watchPrimaryLanguageScores to prevent recreation on every render
+  const watchPrimaryLanguageScores = useMemo(() => [
+    watch('primarySpeakingScore'),
+    watch('primaryListeningScore'),
+    watch('primaryReadingScore'),
+    watch('primaryWritingScore')
+  ], [watch]);
+
+  // Custom error state management for immediate field validation feedback
+  // eslint-disable-next-line no-unused-vars
+  const [customErrors, setCustomErrors] = useState({});
+  
+  // Add state for section error highlights
+  // eslint-disable-next-line no-unused-vars
+  const [sectionErrorHighlights, setSectionErrorHighlights] = useState({});
+  
+  const setCustomError = useCallback((field, message) => {
+    setCustomErrors(prev => ({
+      ...prev,
+      [field]: message
+    }));
+  }, []);
+  
+  const clearCustomError = useCallback((field) => {
+    setCustomErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  }, []);
+
+  // Reset secondary language scores when not taking a secondary test
+  useEffect(() => {
+    if (watchTookSecondaryLanguage === 'no') {
+      // Reset all secondary language fields
+      setValue('secondaryLanguageTest', null);
+      setValue('secSpeaking', null);
+      setValue('secListening', null);
+      setValue('secReading', null);
+      setValue('secWriting', null);
+      
+      Logger.info('Cleared secondary language fields because tookSecondaryLanguageTest is no');
+    }
+  }, [watchTookSecondaryLanguage, setValue]);
+  
+  // Reset secondary language test when primary language test changes
+  useEffect(() => {
+    if (watchPrimaryLanguageTest) {
+      const currentSecondaryTest = watch('secondaryLanguageTest');
+      
+      // If secondary test is already selected, check if they're the same language
+      if (currentSecondaryTest && areSameLanguage(watchPrimaryLanguageTest, currentSecondaryTest)) {
+        // Clear secondary language test if it's the same language as primary
+        setValue('secondaryLanguageTest', '');
+        clearErrors('secondaryLanguageTest');
+        
+        // Also clear secondary scores
+        setValue('secSpeaking', '');
+        setValue('secListening', '');
+        setValue('secReading', '');
+        setValue('secWriting', '');
+      }
+    }
+  }, [watchPrimaryLanguageTest, watch, setValue, clearErrors, areSameLanguage]);
+  
+  // Validate applicant age
+  useEffect(() => {
+    if (watchApplicantAge !== undefined && watchApplicantAge !== null && watchApplicantAge !== '') {
+      const age = Number(watchApplicantAge);
+      if (isNaN(age)) {
+        setCustomError('applicantAge', 'Age must be a number');
+      } else if (age <= 0) {
+        setCustomError('applicantAge', 'Age must be positive');
+      } else if (age > 120) {
+        setCustomError('applicantAge', 'Age must be reasonable (under 120)');
+      } else {
+        clearCustomError('applicantAge');
+      }
+    }
+  }, [watchApplicantAge, setCustomError, clearCustomError]);
+
+  // Validate settlement funds
+  useEffect(() => {
+    if (watchSettlementFunds !== undefined && watchSettlementFunds !== null && watchSettlementFunds !== '') {
+      const funds = Number(watchSettlementFunds);
+      if (isNaN(funds)) {
+        setCustomError('settlementFunds', 'Settlement funds must be a number');
+      } else if (funds < 0) {
+        setCustomError('settlementFunds', 'Settlement funds must be non-negative');
+      } else {
+        clearCustomError('settlementFunds');
+      }
+    }
+  }, [watchSettlementFunds, setCustomError, clearCustomError]);
+
+  // Validate job offer wage
+  useEffect(() => {
+    if (watchJobOffer === 'yes' && 
+        watchAllFields.jobWage !== undefined && 
+        watchAllFields.jobWage !== null && 
+        watchAllFields.jobWage !== '') {
+      const wage = Number(watchAllFields.jobWage);
+      if (isNaN(wage)) {
+        setCustomError('jobWage', 'Job offer wage must be a number');
+      } else if (wage <= 0) {
+        setCustomError('jobWage', 'Job offer wage must be positive');
+      } else {
+        clearCustomError('jobWage');
+      }
+    }
+  }, [watchJobOffer, watchAllFields.jobWage, setCustomError, clearCustomError]);
+
+  // Validate primary language scores are all provided
+  useEffect(() => {
+    // Check if at least one score is provided
+    const hasAnyScore = watchPrimaryLanguageScores.some(score => 
+      score !== undefined && score !== null && score !== '');
+    
+    // Check if all scores are provided
+    const hasAllScores = watchPrimaryLanguageScores.every(score => 
+      score !== undefined && score !== null && score !== '');
+    
+    // If some scores are provided but not all, show an error
+    if (hasAnyScore && !hasAllScores) {
+      setCustomError('primaryLanguageScores', 'All language test scores (speaking, listening, reading, writing) must be provided');
+    } else {
+      clearCustomError('primaryLanguageScores');
+    }
+  }, [watchPrimaryLanguageScores, setCustomError, clearCustomError]);
+
+  // Clear partner fields when marital status changes to Single
+  // or when spouse is PR/Citizen or not accompanying (treated as Single for CRS)
+  useEffect(() => {
+    // Check if user is actually single or should be treated as single for CRS
+    const isTreatedAsSingle = 
+      watchMaritalStatus === 'Single' || 
+      watchSpouseIsPR === 'yes' || 
+      (watchSpouseIsPR === 'no' && watchSpouseIsAccompanying === 'no');
+    
+    if (isTreatedAsSingle) {
+      setValue('partnerEducationLevel', null);
+      setValue('partnerLanguageTest', null);
+      setValue('partnerSpeakingScore', null);
+      setValue('partnerListeningScore', null);
+      setValue('partnerReadingScore', null);
+      setValue('partnerWritingScore', null);
+      setValue('partnerCanadianWorkExperience', null);
+      
+      if (watchMaritalStatus === 'Single') {
+        Logger.info('Cleared partner fields because marital status is Single');
+      } else if (watchSpouseIsPR === 'yes') {
+        Logger.info('Cleared partner fields because spouse is a Canadian citizen/PR (treated as Single for CRS)');
+      } else if (watchSpouseIsPR === 'no' && watchSpouseIsAccompanying === 'no') {
+        Logger.info('Cleared partner fields because spouse is not accompanying (treated as Single for CRS)');
+      }
+    }
+  }, [watchMaritalStatus, watchSpouseIsPR, watchSpouseIsAccompanying, setValue]);
+  
+  // Job offer field clearing is now handled directly in the radio button onChange handlers
+  // This provides immediate feedback to the user when they change their selection
+  
+  // Clear secondary language fields when tookSecondaryLanguageTest changes to "no"
+  useEffect(() => {
+    if (watchTookSecondaryLanguage === 'no') {
+      setValue('secondaryLanguageTest', null);
+      setValue('secondarySpeakingScore', null);
+      setValue('secondaryListeningScore', null);
+      setValue('secondaryReadingScore', null);
+      setValue('secondaryWritingScore', null);
+      Logger.info('Cleared secondary language fields because tookSecondaryLanguageTest is no');
+    }
+  }, [watchTookSecondaryLanguage, setValue]);
+  
+  // Clear Canadian education level field when eduInCanada changes to "no"
+  useEffect(() => {
+    if (watchEducationInCanada === 'no') {
+      setValue('canadianEducationLevel', null);
+      Logger.info('Cleared Canadian education level because eduInCanada is no');
+    }
+  }, [watchEducationInCanada, setValue]);
+  
+  // Clear province of interest when hasProvincialNomination changes to "no"
+  useEffect(() => {
+    if (watchHasProvincialNomination === 'no') {
+      setValue('provinceInterest', 'Not Specified');
+      Logger.info('Set province of interest to "Not Specified" because hasProvincialNomination is no');
+    }
+  }, [watchHasProvincialNomination, setValue]);
+  
+  // Clear relationship when hasCanadianRelatives changes to "no"
+  useEffect(() => {
+    if (watchHasCanadianRelatives === 'no') {
+      setValue('relationshipToCanadian', null);
+      Logger.info('Cleared relationship to Canadian because hasCanadianRelatives is no');
+    }
+  }, [watchHasCanadianRelatives, setValue]);
+  
+  // Validate foreign work experience and NOC code
+  useEffect(() => {
+    if (watchForeignWorkExperience > 0) {
+      if (!watchAllFields.nocCodeForeign) {
+        setCustomError('nocCodeForeign', 'NOC code is required for foreign work experience');
+      } else {
+        clearCustomError('nocCodeForeign');
+      }
+    } else {
+      clearCustomError('nocCodeForeign');
+    }
+  }, [watchForeignWorkExperience, watchAllFields.nocCodeForeign, setCustomError, clearCustomError]);
 
   // --------------------- PROGRESS BAR LOGIC --------------------- //
   const updateProgressBar = useCallback(() => {
@@ -165,7 +628,7 @@ const ProfileForm = () => {
       eduInCanada: 'education',
       canadianEducationLevel: 'education',
       hasECA: 'education',
-      tradesCertification: 'education',
+      tradesCertification: 'work-experience',
       
       // Language
       primaryLanguageTest: 'language',
@@ -228,21 +691,43 @@ const ProfileForm = () => {
       }
     });
     
-    // Personal Info section
-    const personalInfoComplete = 
-      data.fullName && 
-      data.age && 
-      data.citizenship && 
-      data.residence && 
-      data.maritalStatus;
+    // Check each section
+    const newSectionStatus = { ...sectionStatus };
     
-    // Track which sections have been touched
-    const personalInfoTouched = 
+    // Personal Info
+    newSectionStatus['personal-info'].touched = 
       !!data.fullName || 
       !!data.age || 
       !!data.citizenship || 
       !!data.residence || 
       !!data.maritalStatus;
+    
+    newSectionStatus['personal-info'].complete = 
+      !!data.fullName && 
+      !!data.age && 
+      !!data.citizenship && 
+      !!data.residence && 
+      !!data.maritalStatus;
+    
+    // Spouse - only required for married/common-law
+    newSectionStatus['spouse'].touched = 
+      (data.maritalStatus?.toLowerCase() === 'married' || data.maritalStatus?.toLowerCase() === 'common-law') &&
+      (!!data.partnerEducation || 
+      !!data.partnerLanguageTest || 
+      !!data.partnerSpeaking || 
+      !!data.partnerListening || 
+      !!data.partnerReading || 
+      !!data.partnerWriting || 
+      !!data.partnerCanadianExp);
+    
+    newSectionStatus['spouse'].complete = 
+      !(data.maritalStatus?.toLowerCase() === 'married' || data.maritalStatus?.toLowerCase() === 'common-law') || 
+      (!!data.partnerEducation && 
+      !!data.partnerLanguageTest &&
+      !!data.partnerSpeaking &&
+      !!data.partnerListening &&
+      !!data.partnerReading &&
+      !!data.partnerWriting);
     
     // Education section
     const educationComplete = 
@@ -303,45 +788,6 @@ const ProfileForm = () => {
       data.foreignExp !== undefined || 
       !!data.workInsideCanada;
     
-    // Spouse section (only if married or common-law)
-    const spouseComplete = 
-      (data.maritalStatus !== 'married' && data.maritalStatus !== 'common-law') || 
-      (data.partnerEducation && 
-       data.partnerLanguageTest && 
-       data.partnerSpeaking && 
-       data.partnerListening && 
-       data.partnerReading && 
-       data.partnerWriting && 
-       data.partnerCanadianExp !== undefined);
-    
-    const spouseTouched = 
-      (data.maritalStatus === 'married' || data.maritalStatus === 'common-law') && 
-      (!!data.partnerEducation || 
-       !!data.partnerLanguageTest || 
-       !!data.partnerSpeaking || 
-       !!data.partnerListening || 
-       !!data.partnerReading || 
-       !!data.partnerWriting || 
-       data.partnerCanadianExp !== undefined);
-    
-    // Job Offer section
-    const jobOfferComplete = 
-      data.jobOffer && 
-      (data.jobOffer === 'no' || 
-       (data.lmiaStatus && 
-        data.jobWage && 
-        data.jobOfferNocCode && 
-        data.weeklyHours && 
-        data.jobDetails));
-    
-    const jobOfferTouched = 
-      !!data.jobOffer || 
-      !!data.lmiaStatus || 
-      !!data.jobWage || 
-      !!data.jobOfferNocCode || 
-      !!data.weeklyHours || 
-      !!data.jobDetails;
-    
     // Provincial section
     const provincialComplete = 
       data.provNomination && 
@@ -368,61 +814,82 @@ const ProfileForm = () => {
       !!data.preferredDestination;
     
     // Create new status object
-    const newSectionStatus = {
-      'personal-info': { 
-        complete: personalInfoComplete, 
+    newSectionStatus['personal-info'] = { 
+      complete: newSectionStatus['personal-info'].complete, 
         active: openSections['personal-info'],
         hasErrors: !!sectionsWithErrors['personal-info'],
-        touched: personalInfoTouched
-      },
-      'education': { 
+      touched: newSectionStatus['personal-info'].touched
+    };
+    newSectionStatus['education'] = { 
         complete: educationComplete, 
         active: openSections['education'],
         hasErrors: !!sectionsWithErrors['education'],
         touched: educationTouched
-      },
-      'language': { 
+    };
+    newSectionStatus['language'] = { 
         complete: languageComplete, 
         active: openSections['language'],
         hasErrors: !!sectionsWithErrors['language'],
         touched: languageTouched 
-      },
-      'secondary-language': { 
+    };
+    newSectionStatus['secondary-language'] = { 
         complete: secondaryLanguageComplete, 
         active: openSections['secondary-language'],
         hasErrors: !!sectionsWithErrors['secondary-language'],
         touched: secondaryLanguageTouched
-      },
-      'work-experience': { 
+    };
+    newSectionStatus['work-experience'] = { 
         complete: workExperienceComplete, 
         active: openSections['work-experience'],
         hasErrors: !!sectionsWithErrors['work-experience'],
         touched: workExperienceTouched
-      },
-      'spouse': { 
-        complete: spouseComplete, 
+    };
+    newSectionStatus['spouse'] = { 
+      complete: newSectionStatus['spouse'].complete, 
         active: openSections['spouse'],
         hasErrors: !!sectionsWithErrors['spouse'],
-        touched: spouseTouched
-      },
-      'job-offer': { 
+      touched: newSectionStatus['spouse'].touched
+    };
+    
+    // Job Offer section
+    const jobOfferComplete = 
+      data.jobOffer === 'no' || 
+      (data.jobOffer === 'yes' && 
+       data.jobOfferNocCode && 
+       data.lmiaStatus && 
+       data.jobWage && 
+       data.weeklyHours);
+    
+    const jobOfferTouched = 
+      !!data.jobOffer || 
+      !!data.jobOfferNocCode || 
+      !!data.lmiaStatus || 
+      !!data.jobWage || 
+      !!data.weeklyHours;
+    
+    // For job offer section, force hasErrors to false when jobOffer is 'no'
+    // This ensures we get a green checkmark when user selects "No"
+    const jobOfferHasErrors = data.jobOffer === 'no' ? false : !!sectionsWithErrors['job-offer'];
+    
+    newSectionStatus['job-offer'] = { 
         complete: jobOfferComplete, 
         active: openSections['job-offer'],
-        hasErrors: !!sectionsWithErrors['job-offer'],
+        hasErrors: jobOfferHasErrors,
         touched: jobOfferTouched
-      },
-      'provincial': { 
+    };
+    
+    newSectionStatus['provincial'] = { 
         complete: provincialComplete, 
         active: openSections['provincial'],
         hasErrors: !!sectionsWithErrors['provincial'],
         touched: provincialTouched
-      },
-      'additional': { 
+    };
+    
+    newSectionStatus['additional'] = { 
         complete: additionalComplete, 
         active: openSections['additional'],
         hasErrors: !!sectionsWithErrors['additional'],
         touched: additionalTouched
-      }
     };
     
     // Only update if there's a change to prevent infinite loops
@@ -438,14 +905,14 @@ const ProfileForm = () => {
       // Only update if there's a change
       return hasChanged ? newSectionStatus : prevStatus;
     });
-  }, [watchAllFields, openSections, errors]);
+  }, [watchAllFields, openSections, errors, sectionStatus]);
 
   // On every render of the form, save to localStorage + update progress
   useEffect(() => {
     try {
-      localStorage.setItem('immigrationFormData', JSON.stringify(watchAllFields));
+      localStorage.setItem('profileFormData', JSON.stringify(watchAllFields));
     } catch (err) {
-      console.error('Error saving to localStorage:', err);
+      Logger.error('Error saving to localStorage:', err);
     }
     const pct = updateProgressBar();
     setProgressValue(pct || 0);
@@ -456,271 +923,577 @@ const ProfileForm = () => {
 
   // --------------------- COLLAPSIBLE SECTIONS --------------------- //
   const toggleSection = (sectionId) => {
-    setOpenSections((prev) => {
-      const newState = {
-        ...prev,
-        [sectionId]: !prev[sectionId]
-      };
-      
-      // Update section status to reflect active state
-      setSectionStatus(prevStatus => ({
-        ...prevStatus,
-        [sectionId]: {
-          ...prevStatus[sectionId],
-          active: newState[sectionId]
-        }
-      }));
-      
-      return newState;
-    });
+    setOpenSections(prevState => ({
+      ...prevState,
+      [sectionId]: !prevState[sectionId]
+    }));
+  };
+  
+  // Toggle an info block open/closed
+  const toggleInfoBlock = (blockId) => {
+    setOpenInfoBlocks(prev => ({
+      ...prev,
+      [blockId]: !prev[blockId]
+    }));
   };
 
   // --------------------- DROPDOWN DATA (COUNTRIES, CITIES, JOBS) --------------------- //
-  const [countries, setCountries] = useState([
-    { Countries: 'Canada' },
-    { Countries: 'United States' },
-    { Countries: 'United Kingdom' },
-    { Countries: 'India' },
-    { Countries: 'Australia' }
-  ]);
-  const [cities, setCities] = useState([
-    { City: 'Toronto', Provinces: 'Ontario' },
-    { City: 'Vancouver', Provinces: 'British Columbia' },
-    { City: 'Montreal', Provinces: 'Quebec' }
-  ]);
+  const [countries, setCountries] = useState([]);
+  const [cities, setCities] = useState({});
   const [jobs, setJobs] = useState([
     { NOC: '21234', 'Job Title': 'Software Developer' },
     { NOC: '31102', 'Job Title': 'Medical Doctor' },
     { NOC: '41200', 'Job Title': 'Teacher' }
   ]);
 
-  // Example fetch from /Data/. Adjust as needed
+  // Load reference data from local JSON files
   useEffect(() => {
+    const loadReferenceData = async () => {
+      Logger.debug('Loading reference data from local files...');
+      setIsLoading(true);
+      
+      try {
+        // Load from public/Data files
     const loadCountries = async () => {
       try {
+            Logger.debug('Loading countries from local file');
         const response = await fetch('/Data/countries.json');
-        if (response.ok) {
+            
+            if (!response.ok) {
+              throw new Error(`Failed to fetch countries: ${response.status} ${response.statusText}`);
+            }
+            
           const data = await response.json();
+            Logger.debug('Countries loaded successfully:', data.length);
           setCountries(data);
-        }
+            return data;
       } catch (error) {
-        console.warn('Falling back to default countries. Reason:', error);
+            Logger.error('Error loading countries from file:', error);
+            throw error;
       }
     };
+        
     const loadCities = async () => {
       try {
+            Logger.debug('Loading cities from local file');
         const response = await fetch('/Data/canadacities.json');
-        if (response.ok) {
+            
+            if (!response.ok) {
+              throw new Error(`Failed to fetch cities: ${response.status} ${response.statusText}`);
+            }
+            
           const data = await response.json();
+            Logger.debug('Cities loaded successfully:', data.length);
           setCities(data);
-        }
+            return data;
       } catch (error) {
-        console.warn('Falling back to default cities. Reason:', error);
+            Logger.error('Error loading cities from file:', error);
+            throw error;
       }
     };
+        
     const loadJobs = async () => {
       try {
+            Logger.debug('Loading jobs from local file');
         const response = await fetch('/Data/jobs.json');
-        if (response.ok) {
+            
+            if (!response.ok) {
+              throw new Error(`Failed to fetch jobs: ${response.status} ${response.statusText}`);
+            }
+            
           const data = await response.json();
+            Logger.debug('Jobs loaded successfully:', data.length);
           setJobs(data);
-        }
+            return data;
       } catch (error) {
-        console.warn('Falling back to default jobs. Reason:', error);
+            Logger.error('Error loading jobs from file:', error);
+            throw error;
+          }
+        };
+        
+        // Load all data in parallel
+        await Promise.all([
+          loadCountries(),
+          loadCities(),
+          loadJobs()
+        ]);
+        
+        Logger.debug('Reference data loaded successfully from local files');
+      } catch (error) {
+        Logger.error('Error loading reference data:', error);
+      } finally {
+          setIsLoading(false);
       }
     };
 
-    // Check if user already has a profile
+    // Start loading reference data
+    loadReferenceData();
+  }, []);
+
+  // Check if user already has a profile
+  useEffect(() => {
     const checkExistingProfile = async () => {
       try {
-        const token = localStorage.getItem('access_token');
+        Logger.debug('Checking for existing profile...');
+        setIsLoading(true);
         
-        // More detailed token check
-        if (!token) {
-          console.log('No access token found in localStorage');
-          setIsLoading(false);
-          return;
-        }
+        const response = await apiService.api.get('/profiles/recent', {
+          withCredentials: true // Important for JWT cookie
+        });
         
-        console.log('Token found, attempting to check existing profile...');
+        Logger.debug('Profile check response:', response.status);
         
-        // Add a try block to better diagnose the API call
-        try {
-          const response = await axios.get(`http://localhost:8080/api/profiles/recent`, {
-            headers: { 
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          console.log('Profile check response:', response.status, response.data);
-          
-          const data = response.data;
-          if (data.profileExists) {
+        if (response.data && response.data.profileExists === true) {
+          Logger.debug('Existing profile found with ID:', response.data.profileId);
+          // Process existing profile data if needed
+          // If you want to load the profile data into the form:
+          // reset(response.data);
+          // Or just notify the user
             setHasSubmittedProfile(true);
-            localStorage.setItem('has_submitted_profile', 'true');
-            navigate('/dashboard');
-            return;
-          }
-        } catch (apiError) {
-          // Detailed API error logging
-          console.error('API error checking profile:', apiError.message);
-          
-          if (apiError.response) {
-            // Server responded with a non-2xx status
-            console.error('Status:', apiError.response.status);
-            console.error('Data:', apiError.response.data);
-            console.error('Headers:', apiError.response.headers);
-            
-            // Check if token might be invalid (401/403)
-            if (apiError.response.status === 401 || apiError.response.status === 403) {
-              console.error('Authentication issue - token may be invalid or expired');
-            }
-          } else if (apiError.request) {
-            // Request was made but no response received
-            console.error('No response received from server');
-          }
-          
-          // Don't rethrow - just log and continue
+        } else {
+          Logger.debug('No existing profile found');
         }
-      } catch (err) {
-        console.error('Error checking existing profile:', err);
+      } catch (error) {
+        if (error.response) {
+          Logger.error('API error checking profile:', error.message);
+          
+          if (error.response.status === 401 || error.response.status === 403) {
+            Logger.error('Authentication issue - not authenticated or token expired');
+          } else if (error.response.status === 404) {
+            // 404 is expected if the endpoint doesn't exist
+            Logger.error('Endpoint not found: /profiles/recent');
+          } else {
+            Logger.error('Status:', error.response.status);
+            Logger.error('Data:', error.response.data);
+          }
+        } else if (error.request) {
+          Logger.error('No response received from server');
+        } else {
+          Logger.error('Error checking existing profile:', error);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadCountries();
-    loadCities();
-    loadJobs();
-
+    // Only check for existing profile if user is authenticated
     if (currentUser) {
       checkExistingProfile();
     } else {
       setIsLoading(false);
     }
-  }, [currentUser, navigate]);
+  }, [currentUser]);
 
   // --------------------- CLEAR LOCALSTORAGE (IF NEEDED) --------------------- //
   const clearSavedFormData = () => {
-    localStorage.removeItem('immigrationFormData');
+    // Instead of just clearing localStorage, also discard the draft
+    discardDraft();
+    Logger.debug('Form data cleared from drafts');
   };
 
-  // --------------------- SUBMISSION HANDLER --------------------- //
+  // --------------------- FORM SUBMISSION --------------------- //
   const onSubmit = async (formData) => {
-    // Clear prior messages
-    setFormErrors([]);
-    setApiError(null);
-    setApiResponse(null);
-    setValidationSummary(null); // Clear validation summary
-
-    // Create a transformed data object that matches the validation field names
-    const validationData = {
-      // Map form fields to validation expected names
-      userEmail: localStorage.getItem('user_email') || '',
-      applicantName: formData.fullName || '',
-      applicantAge: parseInt(formData.age, 10) || null,
-      applicantCitizenship: formData.citizenship || '',
-      applicantResidence: formData.residence || '',
-      applicantMaritalStatus: formData.maritalStatus ? formData.maritalStatus.charAt(0).toUpperCase() + formData.maritalStatus.slice(1) : '',
+    try {
+      // Process language test scores first
+      const processedData = { ...formData };
       
-      // Education
-      applicantEducationLevel: formData.educationLevel || '',
-      educationCompletedInCanada: formData.eduInCanada === 'yes',
-      canadianEducationLevel: formData.canadianEducationLevel || null,
+      // Process primary language test scores
+      if (processedData.primaryLanguageTest) {
+        try {
+          // Convert to CLB levels
+          const [speakingCLB, listeningCLB, readingCLB, writingCLB] = await Promise.all([
+            convertToCLB(processedData.primaryLanguageTest, 'speaking', processedData.speaking),
+            convertToCLB(processedData.primaryLanguageTest, 'listening', processedData.listening),
+            convertToCLB(processedData.primaryLanguageTest, 'reading', processedData.reading),
+            convertToCLB(processedData.primaryLanguageTest, 'writing', processedData.writing)
+          ]);
+          
+          processedData.speakingCLB = speakingCLB;
+          processedData.listeningCLB = listeningCLB;
+          processedData.readingCLB = readingCLB;
+          processedData.writingCLB = writingCLB;
+        } catch (error) {
+          console.error('Error converting primary language test scores:', error);
+        }
+      }
       
-      // Language - Convert to CLB if needed
-      primaryLanguageTestType: formData.primaryLanguageTest || '',
-      primaryTestSpeakingScore: formData.primaryLanguageTest && formData.speaking ? 
-        convertToCLB(formData.primaryLanguageTest, 'speaking', formData.speaking) : 
-        parseInt(formData.speaking, 10) || null,
-      primaryTestListeningScore: formData.primaryLanguageTest && formData.listening ? 
-        convertToCLB(formData.primaryLanguageTest, 'listening', formData.listening) : 
-        parseInt(formData.listening, 10) || null,
-      primaryTestReadingScore: formData.primaryLanguageTest && formData.reading ? 
-        convertToCLB(formData.primaryLanguageTest, 'reading', formData.reading) : 
-        parseInt(formData.reading, 10) || null,
-      primaryTestWritingScore: formData.primaryLanguageTest && formData.writing ? 
-        convertToCLB(formData.primaryLanguageTest, 'writing', formData.writing) : 
-        parseInt(formData.writing, 10) || null,
+      // Process secondary language test scores if provided
+      if (processedData.secondaryLanguageTest) {
+        try {
+          const [secSpeakingCLB, secListeningCLB, secReadingCLB, secWritingCLB] = await Promise.all([
+            convertToCLB(processedData.secondaryLanguageTest, 'speaking', processedData.secSpeaking),
+            convertToCLB(processedData.secondaryLanguageTest, 'listening', processedData.secListening),
+            convertToCLB(processedData.secondaryLanguageTest, 'reading', processedData.secReading),
+            convertToCLB(processedData.secondaryLanguageTest, 'writing', processedData.secWriting)
+          ]);
+          
+          processedData.secSpeakingCLB = secSpeakingCLB;
+          processedData.secListeningCLB = secListeningCLB;
+          processedData.secReadingCLB = secReadingCLB;
+          processedData.secWritingCLB = secWritingCLB;
+        } catch (error) {
+          console.error('Error converting secondary language test scores:', error);
+        }
+      }
       
-      // Secondary Language - Convert to CLB if needed
-      tookSecondaryLanguageTest: formData.secondaryLangTest === 'yes',
-      secondaryTestType: formData.secondaryLanguageTest || '',
-      secondaryTestSpeakingScore: formData.secondaryLanguageTest && formData.secSpeaking ? 
-        convertToCLB(formData.secondaryLanguageTest, 'speaking', formData.secSpeaking) : 
-        parseInt(formData.secSpeaking, 10) || null,
-      secondaryTestListeningScore: formData.secondaryLanguageTest && formData.secListening ? 
-        convertToCLB(formData.secondaryLanguageTest, 'listening', formData.secListening) : 
-        parseInt(formData.secListening, 10) || null,
-      secondaryTestReadingScore: formData.secondaryLanguageTest && formData.secReading ? 
-        convertToCLB(formData.secondaryLanguageTest, 'reading', formData.secReading) : 
-        parseInt(formData.secReading, 10) || null,
-      secondaryTestWritingScore: formData.secondaryLanguageTest && formData.secWriting ? 
-        convertToCLB(formData.secondaryLanguageTest, 'writing', formData.secWriting) : 
-        parseInt(formData.secWriting, 10) || null,
+      // Process partner language test scores if provided
+      if (processedData.partnerLanguageTest) {
+        try {
+          const [partnerSpeakingCLB, partnerListeningCLB, partnerReadingCLB, partnerWritingCLB] = await Promise.all([
+            convertToCLB(processedData.partnerLanguageTest, 'speaking', processedData.partnerSpeaking),
+            convertToCLB(processedData.partnerLanguageTest, 'listening', processedData.partnerListening),
+            convertToCLB(processedData.partnerLanguageTest, 'reading', processedData.partnerReading),
+            convertToCLB(processedData.partnerLanguageTest, 'writing', processedData.partnerWriting)
+          ]);
+          
+          processedData.partnerSpeakingCLB = partnerSpeakingCLB;
+          processedData.partnerListeningCLB = partnerListeningCLB;
+          processedData.partnerReadingCLB = partnerReadingCLB;
+          processedData.partnerWritingCLB = partnerWritingCLB;
+        } catch (error) {
+          console.error('Error converting partner language test scores:', error);
+        }
+      }
       
-      // Work Experience
-      canadianWorkExperienceYears: parseInt(formData.canadianExp, 10) || null,
-      nocCodeCanadian: formData.nocCodeCanadian || '',
-      foreignWorkExperienceYears: parseInt(formData.foreignExp, 10) || null,
-      nocCodeForeign: formData.nocCodeForeign || '',
+      // Continue with normal form validation
+      // Perform final data consistency validation
+      const validationErrors = performFinalValidation(processedData);
       
-      // Provincial
-      provinceOfInterest: formData.provinceInterest || '',
-      hasProvincialNomination: formData.provNomination === 'yes',
-      hasCanadianRelatives: formData.canadianRelatives === 'yes',
-      relationshipWithCanadianRelative: formData.relativeRelationship || null,
+      if (validationErrors.length > 0) {
+        // Show validation errors to user
+        setValidationSummary({
+          showSummary: true,
+          errors: validationErrors
+        });
+        return;
+      }
       
-      // Financial
-      settlementFundsCAD: parseInt(formData.settlementFunds, 10) || null,
-      preferredCity: formData.preferredCity || '',
-      preferredDestinationProvince: formData.preferredDestination || '',
+      // Clean data to ensure consistency
+      const cleanedData = cleanDataBeforeSubmission(processedData);
       
-      // Job Offer
-      hasJobOffer: formData.jobOffer === 'yes',
-      isJobOfferLmiaApproved: formData.lmiaStatus === 'yes',
-      jobOfferWageCAD: formData.jobWage ? parseInt(formData.jobWage, 10) : null,
-      jobOfferNocCode: formData.jobOfferNocCode || '',
+      // Show loading state
+      setIsSubmitting(true);
       
-      // Partner - Convert to CLB if needed
-      partnerEducationLevel: formData.partnerEducation || null,
-      partnerLanguageTestType: formData.partnerLanguageTest || null,
-      partnerTestSpeakingScore: formData.partnerLanguageTest && formData.partnerSpeaking ? 
-        convertToCLB(formData.partnerLanguageTest, 'speaking', formData.partnerSpeaking) : 
-        parseInt(formData.partnerSpeaking, 10) || null,
-      partnerTestListeningScore: formData.partnerLanguageTest && formData.partnerListening ? 
-        convertToCLB(formData.partnerLanguageTest, 'listening', formData.partnerListening) : 
-        parseInt(formData.partnerListening, 10) || null,
-      partnerTestReadingScore: formData.partnerLanguageTest && formData.partnerReading ? 
-        convertToCLB(formData.partnerLanguageTest, 'reading', formData.partnerReading) : 
-        parseInt(formData.partnerReading, 10) || null,
-      partnerTestWritingScore: formData.partnerLanguageTest && formData.partnerWriting ? 
-        convertToCLB(formData.partnerLanguageTest, 'writing', formData.partnerWriting) : 
-        parseInt(formData.partnerWriting, 10) || null,
-      partnerCanadianWorkExperienceYears: formData.partnerCanadianExp ? parseInt(formData.partnerCanadianExp, 10) : null
-    };
-
-    // 1. Do your custom validation from `ProfileValidation.js`
-    //    (In addition to the react-hook-form checks)
-    const customErrors = validateProfileForm(validationData);
-    if (Object.keys(customErrors).length > 0) {
-      // Flatten the error messages and show them
-      const allErrorMessages = Object.values(customErrors).flat();
-      setFormErrors(allErrorMessages);
+      // Clear prior messages
+      setFormErrors([]);
+      setApiError(null);
+      setApiResponse(null);
       
-      // Generate validation summary
-      generateValidationSummary(customErrors);
-      
-      // Scroll to top to show validation summary
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      
-      return; // Stop here
+      // Instead of showing a confirm dialog, show the modal with form data
+      setTempFormData(cleanedData);
+      setShowSummaryModal(true);
+    } catch (error) {
+      console.error('Error in form submission:', error);
+      setApiError('An unexpected error occurred while processing the form.');
+      setIsSubmitting(false);
     }
+  };
+  
+  // Performs a comprehensive final validation check
+  const performFinalValidation = (formData) => {
+    const validationErrors = [];
+    
+    // Check marital status consistency and spouse status
+    const shouldNotHavePartnerInfo = 
+      formData.applicantMaritalStatus === 'Single' || 
+      formData.spouseIsPR === 'yes' || 
+      (formData.spouseIsPR === 'no' && formData.spouseIsAccompanying === 'no');
+      
+    if (shouldNotHavePartnerInfo) {
+      if (formData.partnerEducationLevel || 
+          formData.partnerLanguageTest || 
+          formData.partnerSpeakingScore || 
+          formData.partnerListeningScore || 
+          formData.partnerReadingScore || 
+          formData.partnerWritingScore || 
+          formData.partnerCanadianWorkExperience) {
+            
+        let message = '';
+        if (formData.applicantMaritalStatus === 'Single') {
+          message = 'Partner information should not be provided for single applicants';
+        } else if (formData.spouseIsPR === 'yes') {
+          message = 'Partner information should not be provided when spouse is a Canadian citizen/PR';
+        } else {
+          message = 'Partner information should not be provided when spouse is not accompanying';
+        }
+            
+        validationErrors.push({
+          field: 'partnerEducationLevel',
+          message,
+          sectionId: 'spouse'
+        });
+      }
+    }
+    
+    // Check job offer consistency
+    if (formData.jobOffer === 'no') {
+      if (formData.jobOfferNocCode || 
+          formData.lmiaStatus || // Updated from jobOfferLmia
+          formData.jobWage) {    // Updated from jobOfferWage
+        validationErrors.push({
+          field: 'jobOfferNocCode',
+          message: 'Job offer fields should be empty when no job offer is selected',
+          sectionId: 'job-offer'
+        });
+      }
+    } else if (formData.jobOffer === 'yes') {
+      if (!formData.jobOfferNocCode) {
+        validationErrors.push({
+          field: 'jobOfferNocCode',
+          message: 'Job offer NOC code is required when a job offer is indicated',
+          sectionId: 'job-offer'
+        });
+      }
+    }
+    
+    // Check secondary language consistency
+    if (formData.tookSecondaryLanguageTest === 'no') {
+      if (formData.secondaryLanguageTest || 
+          formData.secSpeaking || 
+          formData.secListening || 
+          formData.secReading || 
+          formData.secWriting) {
+        validationErrors.push({
+          field: 'secondaryLanguageTest',
+          message: 'Secondary language fields should be empty when no secondary test is indicated',
+          sectionId: 'secondary-language'
+        });
+      }
+    } else if (formData.tookSecondaryLanguageTest === 'yes') {
+      // Check if secondary language test is selected
+      if (!formData.secondaryLanguageTest) {
+        validationErrors.push({
+          field: 'secondaryLanguageTest',
+          message: 'Secondary language test type is required',
+          sectionId: 'secondary-language'
+        });
+      } else {
+        // Check if primary and secondary tests are of the same language
+        if (areSameLanguage(formData.primaryLanguageTest, formData.secondaryLanguageTest)) {
+          validationErrors.push({
+            field: 'secondaryLanguageTest',
+            message: 'Secondary language test must be in a different language than primary test',
+            sectionId: 'secondary-language'
+          });
+        }
+      }
+      
+      // Check if all scores are provided
+      const hasAllScores = formData.secSpeaking && 
+                          formData.secListening && 
+                          formData.secReading && 
+                          formData.secWriting;
+      
+      if (!hasAllScores) {
+        validationErrors.push({
+          field: 'secSpeaking',
+          message: 'All secondary language test scores must be provided',
+          sectionId: 'secondary-language'
+        });
+      }
+    }
+    
+    // Check Canadian education consistency
+    if (formData.eduInCanada === 'yes' && !formData.canadianEducationLevel) {
+      validationErrors.push({
+        field: 'canadianEducationLevel',
+        message: 'Canadian education level is required when education in Canada is indicated',
+        sectionId: 'education'
+      });
+    }
+    
+    // Check provincial nomination consistency
+    if (formData.hasProvincialNomination === 'yes' && !formData.provinceOfInterest) {
+      validationErrors.push({
+        field: 'provinceOfInterest',
+        message: 'Province is required when provincial nomination is indicated',
+        sectionId: 'provincial'
+      });
+    }
+    
+    // Check Canadian relatives consistency
+    if (formData.hasCanadianRelatives === 'yes' && !formData.relationshipToCanadian) {
+      validationErrors.push({
+        field: 'relationshipToCanadian',
+        message: 'Relationship must be specified when Canadian relatives are indicated',
+        sectionId: 'provincial'
+      });
+    }
+    
+    // Check foreign work experience consistency
+    if (formData.foreignExp > 0 && !formData.nocCodeForeign) {
+      validationErrors.push({
+        field: 'nocCodeForeign',
+        message: 'Foreign work experience NOC code is required',
+        sectionId: 'work-experience'
+      });
+    }
+    
+    // Check numeric field ranges
+    if (formData.settlementFunds && formData.settlementFunds < 0) {
+      validationErrors.push({
+        field: 'settlementFunds',
+        message: 'Settlement funds must be non-negative',
+        sectionId: 'additional'
+      });
+    }
+    
+    if (formData.applicantAge && (formData.applicantAge <= 0 || formData.applicantAge > 120)) {
+      validationErrors.push({
+        field: 'applicantAge',
+        message: 'Applicant age must be positive and reasonable (under 120)',
+        sectionId: 'personal-info'
+      });
+    }
+    
+    // Validate Canadian education level against highest education level
+    if (formData.eduInCanada === 'yes' && formData.canadianEducationLevel && formData.educationLevel) {
+      const validOptions = getCanadianEducationOptions(formData.educationLevel);
+      const isValid = validOptions.some(opt => opt.value === formData.canadianEducationLevel);
+      
+      if (!isValid) {
+        validationErrors.push({
+          message: 'Canadian education level cannot be higher than your highest education level',
+          field: 'canadianEducationLevel',
+          sectionId: 'education'
+        });
+      }
+    }
+    
+    return validationErrors;
+  };
+  
+  // Clean data before submission to ensure consistency
+  const cleanDataBeforeSubmission = (formData) => {
+    // Create a copy of the form data
+    const cleanedData = { ...formData };
+    
+    // Convert language scores to proper values
+    // Primary language test scores - ensure we send just the value, not the full option object
+    if (cleanedData.speaking && typeof cleanedData.speaking === 'object' && cleanedData.speaking.value) {
+      cleanedData.speaking = cleanedData.speaking.value;
+    }
+    if (cleanedData.listening && typeof cleanedData.listening === 'object' && cleanedData.listening.value) {
+      cleanedData.listening = cleanedData.listening.value;
+    }
+    if (cleanedData.reading && typeof cleanedData.reading === 'object' && cleanedData.reading.value) {
+      cleanedData.reading = cleanedData.reading.value;
+    }
+    if (cleanedData.writing && typeof cleanedData.writing === 'object' && cleanedData.writing.value) {
+      cleanedData.writing = cleanedData.writing.value;
+    }
+    
+    // Secondary language test scores
+    if (cleanedData.secSpeaking && typeof cleanedData.secSpeaking === 'object' && cleanedData.secSpeaking.value) {
+      cleanedData.secSpeaking = cleanedData.secSpeaking.value;
+    }
+    if (cleanedData.secListening && typeof cleanedData.secListening === 'object' && cleanedData.secListening.value) {
+      cleanedData.secListening = cleanedData.secListening.value;
+    }
+    if (cleanedData.secReading && typeof cleanedData.secReading === 'object' && cleanedData.secReading.value) {
+      cleanedData.secReading = cleanedData.secReading.value;
+    }
+    if (cleanedData.secWriting && typeof cleanedData.secWriting === 'object' && cleanedData.secWriting.value) {
+      cleanedData.secWriting = cleanedData.secWriting.value;
+    }
+    
+    // Partner language test scores
+    if (cleanedData.partnerSpeaking && typeof cleanedData.partnerSpeaking === 'object' && cleanedData.partnerSpeaking.value) {
+      cleanedData.partnerSpeaking = cleanedData.partnerSpeaking.value;
+    }
+    if (cleanedData.partnerListening && typeof cleanedData.partnerListening === 'object' && cleanedData.partnerListening.value) {
+      cleanedData.partnerListening = cleanedData.partnerListening.value;
+    }
+    if (cleanedData.partnerReading && typeof cleanedData.partnerReading === 'object' && cleanedData.partnerReading.value) {
+      cleanedData.partnerReading = cleanedData.partnerReading.value;
+    }
+    if (cleanedData.partnerWriting && typeof cleanedData.partnerWriting === 'object' && cleanedData.partnerWriting.value) {
+      cleanedData.partnerWriting = cleanedData.partnerWriting.value;
+    }
+    
+    // Clean partner data if single or if spouse is PR/Citizen or not accompanying
+    if (cleanedData.applicantMaritalStatus === 'Single' || 
+        cleanedData.spouseIsPR === 'yes' || 
+        (cleanedData.spouseIsPR === 'no' && cleanedData.spouseIsAccompanying === 'no')) {
+      cleanedData.partnerEducationLevel = null;
+      cleanedData.partnerLanguageTest = null;
+      cleanedData.partnerSpeaking = null;
+      cleanedData.partnerListening = null;
+      cleanedData.partnerReading = null;
+      cleanedData.partnerWriting = null;
+      cleanedData.partnerCanadianWorkExperience = null;
+    }
+    
+    // Clean job offer data if no job offer
+    if (cleanedData.jobOffer === 'no') {
+      cleanedData.jobOfferNocCode = null;
+      cleanedData.lmiaStatus = null;
+      cleanedData.jobWage = null;
+      cleanedData.weeklyHours = null;
+    }
+    
+    // Clean secondary language data if no test
+    if (cleanedData.tookSecondaryLanguageTest === 'no') {
+      cleanedData.secondaryLanguageTest = null;
+      cleanedData.secSpeaking = null;
+      cleanedData.secListening = null;
+      cleanedData.secReading = null;
+      cleanedData.secWriting = null;
+    }
+    
+    // Clean Canadian education level if no education in Canada
+    if (cleanedData.eduInCanada === 'no') {
+      cleanedData.canadianEducationLevel = null;
+    }
+    
+    // Clean province of interest if no provincial nomination
+    if (cleanedData.hasProvincialNomination === 'no') {
+      cleanedData.provinceInterest = 'Not Specified';
+    }
+    
+    // Clean relationship if no Canadian relatives
+    if (cleanedData.hasCanadianRelatives === 'no') {
+      cleanedData.relationshipToCanadian = null;
+    }
+    
+    return cleanedData;
+  };
 
-    // Instead of showing a confirm dialog, show the modal with form data
-    setTempFormData(formData);
-    setShowSummaryModal(true);
+  // Test API connectivity before form submission
+  const testApiConnectivity = async () => {
+    try {
+      Logger.debug('Testing API connectivity before form submission...');
+      
+      // First, test if we can fetch a CSRF token
+      await apiService.fetchCsrfToken();
+      Logger.debug('CSRF token fetch test succeeded');
+      
+      // Next, test if we can access the /profiles/recent endpoint
+      const response = await apiService.api.get('/profiles/recent');
+      Logger.debug('API connectivity test succeeded:', response.status);
+      
+      return { success: true };
+    } catch (error) {
+      Logger.error('API connectivity test failed:', error);
+      
+      if (error.response) {
+        return { 
+          success: false, 
+          status: error.response.status,
+          message: `Server responded with status ${error.response.status}`
+        };
+      } else if (error.request) {
+        return { 
+          success: false, 
+          message: 'No response received from server. The server might be down or unreachable.'
+        };
+      } else {
+        return { 
+          success: false, 
+          message: `Error: ${error.message}`
+        };
+      }
+    }
   };
 
   // Handle confirmation from the modal
@@ -729,21 +1502,80 @@ const ProfileForm = () => {
     setShowSummaryModal(false);
     
     if (!tempFormData) {
+      Logger.error('No form data available for submission');
+      setFormErrors(['No form data available for submission']);
       return; // Safety check
     }
     
-    const formData = tempFormData;
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
+      // Test API connectivity first
+      const connectivityTest = await testApiConnectivity();
+      if (!connectivityTest.success) {
+        Logger.error('API connectivity test failed. Cannot proceed with form submission.');
+        setFormErrors([`Cannot connect to server: ${connectivityTest.message}`]);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Check authentication using currentUser from AuthContext instead of localStorage token
+      if (!currentUser) {
+        Logger.error('Authentication required. Please log in.');
         setFormErrors(['Authentication required. Please log in.']);
         setIsSubmitting(false);
         return;
       }
 
-      // Example: convert "yes/no" → boolean
+      // Ensure we have a fresh CSRF token before submission
+      try {
+        await apiService.fetchCsrfToken(true); // Force a fresh token
+        Logger.debug('Successfully fetched CSRF token before form submission');
+        Logger.debug('CSRF token being used:', apiService.csrfToken);
+        Logger.debug('CSRF header name:', apiService.csrfHeaderName);
+      } catch (csrfError) {
+        Logger.error('Failed to fetch CSRF token before form submission', csrfError);
+        setFormErrors(['Failed to fetch CSRF token. Please try again.']);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Debug job offer data
+      Logger.debug("========= JOB OFFER DEBUG =========");
+      Logger.debug("jobOffer:", formData.jobOffer);
+      Logger.debug("jobOfferNocCode:", formData.jobOfferNocCode);
+      Logger.debug("All form values:", formData);
+      
+      let jobOfferNocCodeValue = null;
+      
+      if (formData.jobOffer === 'yes' && formData.jobOfferNocCode) {
+        try {
+          jobOfferNocCodeValue = parseInt(formData.jobOfferNocCode, 10);
+          Logger.debug("JOB OFFER NOC CODE CAPTURED:", jobOfferNocCodeValue, "- Type:", typeof jobOfferNocCodeValue);
+          
+          if (isNaN(jobOfferNocCodeValue)) {
+            Logger.error("Job offer NOC code could not be parsed as a number:", formData.jobOfferNocCode);
+          }
+        } catch (err) {
+          Logger.error("Error parsing job offer NOC code:", err);
+        }
+      }
+      
+      // If NOC code is still not valid after first attempt, check localStorage as fallback
+      if (formData.jobOffer === 'yes' && (!jobOfferNocCodeValue || isNaN(jobOfferNocCodeValue))) {
+        try {
+          // Try to get from localStorage
+          const storedFormData = JSON.parse(localStorage.getItem('profileFormData') || '{}');
+          if (storedFormData.jobOfferNocCode) {
+            jobOfferNocCodeValue = parseInt(storedFormData.jobOfferNocCode, 10);
+            Logger.debug("FALLBACK: Using localStorage NOC value:", jobOfferNocCodeValue, "- Type:", typeof jobOfferNocCodeValue);
+          }
+        } catch (err) {
+          Logger.error("Error parsing stored NOC code:", err);
+        }
+      }
+      
+      // Convert yes/no string values to boolean
       const yesNoToBool = (val) => val === 'yes';
 
       // Prepare mapped data for your API
@@ -761,73 +1593,66 @@ const ProfileForm = () => {
 
         // Education
         applicantEducationLevel: formData.educationLevel || '',
-        educationCompletedInCanada: yesNoToBool(formData.eduInCanada),
+        educationCompletedInCanada: formData.eduInCanada === 'yes',
         canadianEducationLevel: formData.canadianEducationLevel || null,
         hasEducationalCredentialAssessment: yesNoToBool(formData.hasECA),
         tradesCertification: yesNoToBool(formData.tradesCertification),
 
-        // Primary Language - Store original scores and CLB scores
+        // Primary Language - We'll set CLB scores later
         primaryLanguageTestType: formData.primaryLanguageTest || '',
-        primaryTestSpeakingScore: parseInt(formData.speaking, 10) || null,
-        primaryTestListeningScore: parseInt(formData.listening, 10) || null,
-        primaryTestReadingScore: parseInt(formData.reading, 10) || null,
-        primaryTestWritingScore: parseInt(formData.writing, 10) || null,
-        primaryTestSpeakingOriginal: formData.speaking || null,
-        primaryTestListeningOriginal: formData.listening || null,
-        primaryTestReadingOriginal: formData.reading || null,
-        primaryTestWritingOriginal: formData.writing || null,
+        primaryTestSpeakingScore: null, // Will be set to CLB value
+        primaryTestListeningScore: null, // Will be set to CLB value
+        primaryTestReadingScore: null, // Will be set to CLB value
+        primaryTestWritingScore: null, // Will be set to CLB value
 
-        // Secondary Language - Store original scores and CLB scores
+        // Secondary Language - Similar approach
         tookSecondaryLanguageTest: yesNoToBool(formData.secondaryLangTest),
         secondaryTestType: formData.secondaryLanguageTest || null,
-        secondaryTestSpeakingScore: formData.secondaryLanguageTest && formData.secSpeaking ? 
-          convertToCLB(formData.secondaryLanguageTest, 'speaking', formData.secSpeaking) : null,
-        secondaryTestListeningScore: formData.secondaryLanguageTest && formData.secListening ? 
-          convertToCLB(formData.secondaryLanguageTest, 'listening', formData.secListening) : null,
-        secondaryTestReadingScore: formData.secondaryLanguageTest && formData.secReading ? 
-          convertToCLB(formData.secondaryLanguageTest, 'reading', formData.secReading) : null,
-        secondaryTestWritingScore: formData.secondaryLanguageTest && formData.secWriting ? 
-          convertToCLB(formData.secondaryLanguageTest, 'writing', formData.secWriting) : null,
-        secondaryTestSpeakingOriginal: formData.secSpeaking || null,
-        secondaryTestListeningOriginal: formData.secListening || null,
-        secondaryTestReadingOriginal: formData.secReading || null,
-        secondaryTestWritingOriginal: formData.secWriting || null,
+        secondaryTestSpeakingScore: null, // Will be set to CLB value
+        secondaryTestListeningScore: null, // Will be set to CLB value 
+        secondaryTestReadingScore: null, // Will be set to CLB value
+        secondaryTestWritingScore: null, // Will be set to CLB value
 
         // Work Experience
         canadianWorkExperienceYears: parseInt(formData.canadianExp, 10) || 0,
-        nocCodeCanadian: formData.nocCodeCanadian || null,
+        nocCodeCanadian: formData.nocCodeCanadian ? parseInt(formData.nocCodeCanadian, 10) : null,
         foreignWorkExperienceYears: parseInt(formData.foreignExp, 10) || 0,
-        nocCodeForeign: formData.nocCodeForeign || '',
+        nocCodeForeign: formData.nocCodeForeign ? parseInt(formData.nocCodeForeign, 10) : null,
         workingInCanada: yesNoToBool(formData.workInsideCanada),
 
-        // Spouse - Set to null if marital status is Single
-        partnerEducationLevel: formData.maritalStatus === 'Single' ? null : formData.partnerEducation || null,
-        partnerLanguageTestType: formData.maritalStatus === 'Single' ? null : formData.partnerLanguageTest || null,
-        partnerTestSpeakingScore: formData.maritalStatus === 'Single' ? null : 
-          (formData.partnerLanguageTest && formData.partnerSpeaking ? 
-            convertToCLB(formData.partnerLanguageTest, 'speaking', formData.partnerSpeaking) : null),
-        partnerTestListeningScore: formData.maritalStatus === 'Single' ? null : 
-          (formData.partnerLanguageTest && formData.partnerListening ? 
-            convertToCLB(formData.partnerLanguageTest, 'listening', formData.partnerListening) : null),
-        partnerTestReadingScore: formData.maritalStatus === 'Single' ? null : 
-          (formData.partnerLanguageTest && formData.partnerReading ? 
-            convertToCLB(formData.partnerLanguageTest, 'reading', formData.partnerReading) : null),
-        partnerTestWritingScore: formData.maritalStatus === 'Single' ? null : 
-          (formData.partnerLanguageTest && formData.partnerWriting ? 
-            convertToCLB(formData.partnerLanguageTest, 'writing', formData.partnerWriting) : null),
-        partnerCanadianWorkExperienceYears: formData.maritalStatus === 'Single' ? null : parseInt(formData.partnerCanadianExp, 10) || null,
+        // Spouse status
+        spouseIsPR: yesNoToBool(formData.spouseIsPR),
+        spouseIsAccompanying: yesNoToBool(formData.spouseIsAccompanying),
 
-        // Job Offer
+        // Spouse - Set to null if marital status is Single or spouse is PR or not accompanying
+        partnerEducationLevel: formData.maritalStatus?.toLowerCase() === 'single' || 
+          formData.spouseIsPR === 'yes' || 
+          (formData.spouseIsPR === 'no' && formData.spouseIsAccompanying === 'no') ? 
+          null : formData.partnerEducation || null,
+        partnerLanguageTestType: formData.maritalStatus?.toLowerCase() === 'single' || 
+          formData.spouseIsPR === 'yes' || 
+          (formData.spouseIsPR === 'no' && formData.spouseIsAccompanying === 'no') ? 
+          null : formData.partnerLanguageTest || null,
+        partnerTestSpeakingScore: null, // Will be set to CLB value
+        partnerTestListeningScore: null, // Will be set to CLB value
+        partnerTestReadingScore: null, // Will be set to CLB value
+        partnerTestWritingScore: null, // Will be set to CLB value
+        partnerCanadianWorkExperienceYears: formData.maritalStatus?.toLowerCase() === 'single' || 
+          formData.spouseIsPR === 'yes' || 
+          (formData.spouseIsPR === 'no' && formData.spouseIsAccompanying === 'no') ? 
+          null : parseInt(formData.partnerCanadianExp, 10) || null,
+
+        // Job Offer - FORCE the NOC code to use our directly captured value
         hasJobOffer: yesNoToBool(formData.jobOffer),
-        isJobOfferLmiaApproved: yesNoToBool(formData.lmiaStatus),
-        jobOfferWageCAD: parseInt(formData.jobWage, 10) || null,
-        jobOfferNocCode: formData.jobOfferNocCode || null,
+        isJobOfferLmiaApproved: formData.jobOffer === 'yes' ? yesNoToBool(formData.lmiaStatus) : false,
+        jobOfferWageCAD: formData.jobOffer === 'yes' && formData.jobWage ? parseInt(formData.jobWage, 10) : null,
+        jobOfferNocCode: formData.jobOffer === 'yes' ? jobOfferNocCodeValue : null, // Use our directly captured value as a NUMBER
         weeklyHours: parseInt(formData.weeklyHours, 10) || null,
         jobOfferDescription: formData.jobDetails || null,
 
         // Provincial Information
         hasProvincialNomination: yesNoToBool(formData.provNomination),
-        provinceOfInterest: formData.provinceInterest || '',
+        provinceOfInterest: formData.provinceInterest || 'Not Specified',
         hasCanadianRelatives: yesNoToBool(formData.canadianRelatives),
         relationshipWithCanadianRelative: formData.relativeRelationship || null,
         receivedInvitationToApply: yesNoToBool(formData.receivedITA),
@@ -841,11 +1666,217 @@ const ProfileForm = () => {
         jsonPayload: JSON.stringify(formData)
       };
 
+      // Add the CLB scores based on the extracted values
+      // Primary language
+      if (formData.primaryLanguageTest) {
+        try {
+          const speakingValue = typeof formData.speaking === 'object' && formData.speaking !== null ? 
+            formData.speaking.value : formData.speaking;
+          const listeningValue = typeof formData.listening === 'object' && formData.listening !== null ? 
+            formData.listening.value : formData.listening;
+          const readingValue = typeof formData.reading === 'object' && formData.reading !== null ? 
+            formData.reading.value : formData.reading;
+          const writingValue = typeof formData.writing === 'object' && formData.writing !== null ? 
+            formData.writing.value : formData.writing;
+          
+          console.log('DEBUG extractedValues:', {
+            testType: formData.primaryLanguageTest,
+            speaking: {
+              original: formData.speaking,
+              extracted: speakingValue,
+              type: typeof speakingValue
+            },
+            listening: {
+              original: formData.listening,
+              extracted: listeningValue,
+              type: typeof listeningValue
+            },
+            reading: {
+              original: formData.reading,
+              extracted: readingValue,
+              type: typeof readingValue
+            },
+            writing: {
+              original: formData.writing,
+              extracted: writingValue,
+              type: typeof writingValue
+            }
+          });
+          
+          let primaryClbSpeaking, primaryClbListening, primaryClbReading, primaryClbWriting;
+          
+          if (speakingValue) {
+            primaryClbSpeaking = await convertToCLB(formData.primaryLanguageTest, 'speaking', speakingValue);
+            mappedSubmission.primaryClbSpeaking = primaryClbSpeaking;
+            // Set the actual field that the backend expects
+            mappedSubmission.primaryTestSpeakingScore = primaryClbSpeaking;
+          }
+          if (listeningValue) {
+            primaryClbListening = await convertToCLB(formData.primaryLanguageTest, 'listening', listeningValue);
+            mappedSubmission.primaryClbListening = primaryClbListening;
+            // Set the actual field that the backend expects
+            mappedSubmission.primaryTestListeningScore = primaryClbListening;
+          }
+          if (readingValue) {
+            primaryClbReading = await convertToCLB(formData.primaryLanguageTest, 'reading', readingValue);
+            mappedSubmission.primaryClbReading = primaryClbReading;
+            // Set the actual field that the backend expects
+            mappedSubmission.primaryTestReadingScore = primaryClbReading;
+          }
+          if (writingValue) {
+            primaryClbWriting = await convertToCLB(formData.primaryLanguageTest, 'writing', writingValue);
+            mappedSubmission.primaryClbWriting = primaryClbWriting;
+            // Set the actual field that the backend expects
+            mappedSubmission.primaryTestWritingScore = primaryClbWriting;
+          }
+          
+          console.log('DEBUG CLB Scores (Primary):', {
+            speaking: primaryClbSpeaking,
+            listening: primaryClbListening,
+            reading: primaryClbReading,
+            writing: primaryClbWriting
+          });
+        } catch (error) {
+          console.error('ERROR converting primary scores to CLB:', error);
+          Logger.error('Error calculating primary language CLB scores:', error);
+        }
+      }
+
+      // Secondary language
+      if (formData.secondaryLanguageTest && yesNoToBool(formData.secondaryLangTest)) {
+        try {
+          const speakingValue = typeof formData.secSpeaking === 'object' && formData.secSpeaking !== null ? 
+            formData.secSpeaking.value : formData.secSpeaking;
+          const listeningValue = typeof formData.secListening === 'object' && formData.secListening !== null ? 
+            formData.secListening.value : formData.secListening;
+          const readingValue = typeof formData.secReading === 'object' && formData.secReading !== null ? 
+            formData.secReading.value : formData.secReading;
+          const writingValue = typeof formData.secWriting === 'object' && formData.secWriting !== null ? 
+            formData.secWriting.value : formData.secWriting;
+          
+          if (speakingValue) {
+            const clbScore = await convertToCLB(formData.secondaryLanguageTest, 'speaking', speakingValue);
+            mappedSubmission.secondaryClbSpeaking = clbScore;
+            // Set the actual field that the backend expects
+            mappedSubmission.secondaryTestSpeakingScore = clbScore;
+          }
+          if (listeningValue) {
+            const clbScore = await convertToCLB(formData.secondaryLanguageTest, 'listening', listeningValue);
+            mappedSubmission.secondaryClbListening = clbScore;
+            // Set the actual field that the backend expects
+            mappedSubmission.secondaryTestListeningScore = clbScore;
+          }
+          if (readingValue) {
+            const clbScore = await convertToCLB(formData.secondaryLanguageTest, 'reading', readingValue);
+            mappedSubmission.secondaryClbReading = clbScore;
+            // Set the actual field that the backend expects
+            mappedSubmission.secondaryTestReadingScore = clbScore;
+          }
+          if (writingValue) {
+            const clbScore = await convertToCLB(formData.secondaryLanguageTest, 'writing', writingValue);
+            mappedSubmission.secondaryClbWriting = clbScore;
+            // Set the actual field that the backend expects
+            mappedSubmission.secondaryTestWritingScore = clbScore;
+          }
+        } catch (error) {
+          Logger.error('Error calculating secondary language CLB scores:', error);
+        }
+      }
+
+      // Partner language
+      if (formData.maritalStatus?.toLowerCase() !== 'single' && 
+          formData.spouseIsPR !== 'yes' && 
+          !(formData.spouseIsPR === 'no' && formData.spouseIsAccompanying === 'no') && 
+          formData.partnerLanguageTest) {
+        try {
+          const speakingValue = typeof formData.partnerSpeaking === 'object' && formData.partnerSpeaking !== null ? 
+            formData.partnerSpeaking.value : formData.partnerSpeaking;
+          const listeningValue = typeof formData.partnerListening === 'object' && formData.partnerListening !== null ? 
+            formData.partnerListening.value : formData.partnerListening;
+          const readingValue = typeof formData.partnerReading === 'object' && formData.partnerReading !== null ? 
+            formData.partnerReading.value : formData.partnerReading;
+          const writingValue = typeof formData.partnerWriting === 'object' && formData.partnerWriting !== null ? 
+            formData.partnerWriting.value : formData.partnerWriting;
+          
+          if (speakingValue) {
+            const clbScore = await convertToCLB(formData.partnerLanguageTest, 'speaking', speakingValue);
+            mappedSubmission.partnerClbSpeaking = clbScore;
+            // Set the actual field that the backend expects
+            mappedSubmission.partnerTestSpeakingScore = clbScore;
+          }
+          if (listeningValue) {
+            const clbScore = await convertToCLB(formData.partnerLanguageTest, 'listening', listeningValue);
+            mappedSubmission.partnerClbListening = clbScore;
+            // Set the actual field that the backend expects
+            mappedSubmission.partnerTestListeningScore = clbScore;
+          }
+          if (readingValue) {
+            const clbScore = await convertToCLB(formData.partnerLanguageTest, 'reading', readingValue);
+            mappedSubmission.partnerClbReading = clbScore;
+            // Set the actual field that the backend expects
+            mappedSubmission.partnerTestReadingScore = clbScore;
+          }
+          if (writingValue) {
+            const clbScore = await convertToCLB(formData.partnerLanguageTest, 'writing', writingValue);
+            mappedSubmission.partnerClbWriting = clbScore;
+            // Set the actual field that the backend expects
+            mappedSubmission.partnerTestWritingScore = clbScore;
+          }
+        } catch (error) {
+          Logger.error('Error calculating partner language CLB scores:', error);
+        }
+      }
+
+      // Update the final submission debugging logs
+      // ENHANCED DEBUGGING FOR FINAL SUBMISSION
+      Logger.debug("========== FINAL SUBMISSION DEBUGGING ==========");
+      Logger.debug("Final hasJobOffer:", mappedSubmission.hasJobOffer);
+      Logger.debug("Final jobOfferNocCode:", mappedSubmission.jobOfferNocCode);
+      Logger.debug("Final jobOfferNocCode type:", typeof mappedSubmission.jobOfferNocCode);
+      
+      // Log the exact JSON payload being sent to the backend
+      Logger.debug("EXACT JSON PAYLOAD BEING SENT:", JSON.stringify(mappedSubmission, null, 2));
+      
+      // ADDITIONAL LANGUAGE SCORE DEBUGGING
+      Logger.debug("========== LANGUAGE SCORE VALIDATION ==========");
+      Logger.debug("PRIMARY LANGUAGE TEST SCORES:");
+      Logger.debug("- Original speaking:", formData.speaking, "Type:", typeof formData.speaking);
+      Logger.debug("- Original listening:", formData.listening, "Type:", typeof formData.listening);
+      Logger.debug("- Original reading:", formData.reading, "Type:", typeof formData.reading);
+      Logger.debug("- Original writing:", formData.writing, "Type:", typeof formData.writing);
+      
+      Logger.debug("PRIMARY LANGUAGE MAPPED SCORES:");
+      Logger.debug("- Mapped speaking:", mappedSubmission.primaryTestSpeakingScore, "Type:", typeof mappedSubmission.primaryTestSpeakingScore);
+      Logger.debug("- Mapped listening:", mappedSubmission.primaryTestListeningScore, "Type:", typeof mappedSubmission.primaryTestListeningScore);
+      Logger.debug("- Mapped reading:", mappedSubmission.primaryTestReadingScore, "Type:", typeof mappedSubmission.primaryTestReadingScore);
+      Logger.debug("- Mapped writing:", mappedSubmission.primaryTestWritingScore, "Type:", typeof mappedSubmission.primaryTestWritingScore);
+      
+      // Check for problematic fields that would cause 400 errors
+      Logger.debug("========== FIELD TYPE VALIDATION ==========");
+      Object.entries(mappedSubmission).forEach(([key, value]) => {
+        if (value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+          Logger.error(`PROBLEMATIC FIELD: ${key} is still an object: ${JSON.stringify(value)}`);
+        }
+      });
+      
+      // Ensure this field is properly set in the payload
+      Logger.debug("FINAL JOB OFFER NOC CODE VALUE:", mappedSubmission.jobOfferNocCode);
+      
+      // Ensure province field is properly set
+      Logger.debug("FINAL PROVINCE OF INTEREST VALUE:", mappedSubmission.provinceOfInterest);
+
       // Log the request for debugging
-      console.log('Submission payload:', mappedSubmission);
+      Logger.debug('Submission payload:', mappedSubmission);
+      
+      // Final check for job offer data
+      if (mappedSubmission.hasJobOffer && mappedSubmission.jobOfferNocCode === null) {
+        Logger.error("ERROR: Job offer is marked as Yes but NOC code is null");
+        setFormErrors(["Job offer NOC code is required when job offer is Yes. Please select a NOC code for your job offer."]);
+        return;
+      }
       
       // Debug logging for language scores
-      console.log('Primary language scores (CLB):', {
+      Logger.debug('Primary language scores (CLB):', {
         type: mappedSubmission.primaryLanguageTestType,
         speaking: mappedSubmission.primaryTestSpeakingScore,
         listening: mappedSubmission.primaryTestListeningScore,
@@ -854,7 +1885,7 @@ const ProfileForm = () => {
       });
       
       if (mappedSubmission.tookSecondaryLanguageTest) {
-        console.log('Secondary language scores (CLB):', {
+        Logger.debug('Secondary language scores (CLB):', {
           type: mappedSubmission.secondaryTestType,
           speaking: mappedSubmission.secondaryTestSpeakingScore,
           listening: mappedSubmission.secondaryTestListeningScore,
@@ -863,24 +1894,185 @@ const ProfileForm = () => {
         });
       }
       
-      // Check if jsonPayload is empty
-      if (!mappedSubmission.jsonPayload || mappedSubmission.jsonPayload === '{}' || mappedSubmission.jsonPayload === 'null') {
-        console.warn('Warning: jsonPayload is empty, setting default value');
-        mappedSubmission.jsonPayload = JSON.stringify({
-          formData: formData,
-          timestamp: new Date().toISOString()
-        });
+      // Ensure we have a payload
+      let jsonPayload = JSON.stringify(mappedSubmission);
+      if (!jsonPayload) {
+        Logger.warn('Warning: jsonPayload is empty, setting default value');
+        jsonPayload = "{}";
       }
+      
+      // Log job offer details before submission
+      Logger.debug('Job offer details before submission:');
+      Logger.debug('jobOffer radio value:', formData.jobOffer);
+      Logger.debug('jobOfferNocCode value:', formData.jobOfferNocCode);
+      Logger.debug('jobOfferNocCode parsed:', formData.jobOfferNocCode ? parseInt(formData.jobOfferNocCode, 10) : null);
 
-      // Submit via Axios
-      const response = await axios.post('http://localhost:8080/api/profiles', mappedSubmission, {
+      // Log the HTTP request details for debugging
+      Logger.debug('About to send POST request to /profiles...');
+      Logger.debug('Request headers:', JSON.stringify(apiService.api.defaults.headers));
+      Logger.debug('CSRF token being used:', apiService.csrfToken);
+      Logger.debug('CSRF header name:', apiService.csrfHeaderName);
+      
+      try {
+        // Make the URL explicit for debugging - using a direct variable to avoid issues with accessing apiService properties
+        const API_BASE_URL = 'http://localhost:8080/api';
+        const apiUrl = API_BASE_URL + '/profiles';
+        Logger.debug(`Making explicit API call to URL: ${apiUrl}`);
+        
+        // Add debug headers to trace the request
+        const requestConfig = {
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+            'X-Debug-Info': 'ProfileForm-Submission',
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
+        };
+        
+        // Debug the final submission object before sending
+        console.log('DEBUG FINAL mappedSubmission:', {
+          primary: {
+            test: mappedSubmission.primaryLanguageTest,
+            speaking: {
+              rawScore: mappedSubmission.primaryTestSpeakingScore,
+              clbScore: mappedSubmission.primaryClbSpeaking,
+              scoreType: typeof mappedSubmission.primaryTestSpeakingScore
+            },
+            listening: {
+              rawScore: mappedSubmission.primaryTestListeningScore,
+              clbScore: mappedSubmission.primaryClbListening,
+              scoreType: typeof mappedSubmission.primaryTestListeningScore
+            },
+            reading: {
+              rawScore: mappedSubmission.primaryTestReadingScore,
+              clbScore: mappedSubmission.primaryClbReading,
+              scoreType: typeof mappedSubmission.primaryTestReadingScore
+            },
+            writing: {
+              rawScore: mappedSubmission.primaryTestWritingScore,
+              clbScore: mappedSubmission.primaryClbWriting,
+              scoreType: typeof mappedSubmission.primaryTestWritingScore
+            }
+          }
+        });
+        
+        // Log the full original object for debugging
+        console.log('DEBUG SUBMISSION FULL OBJECT:', mappedSubmission);
+        
+        if (apiService.csrfToken) {
+          requestConfig.headers[apiService.csrfHeaderName] = apiService.csrfToken;
         }
-      });
-
-      // Clear localStorage on success
+        
+        Logger.debug('Final submission request config:', requestConfig);
+        
+        // Variable to store response
+        let response;
+        
+        // Try both approach: apiService and direct axios
+        Logger.debug('Trying API call with direct axios first...');
+        try {
+          // Use axios directly with explicit URL
+          response = await axios.post(apiUrl, mappedSubmission, requestConfig);
+          Logger.debug('Direct axios call successful! Response:', response);
+        } catch (directAxiosError) {
+          Logger.error('Direct axios call failed:', directAxiosError);
+          // Log detailed error information
+          if (directAxiosError.response) {
+            Logger.error('Error response status:', directAxiosError.response.status);
+            Logger.error('Error response data:', directAxiosError.response.data);
+          } else if (directAxiosError.request) {
+            Logger.error('No response received from server:', directAxiosError.request);
+          } else {
+            Logger.error('Error setting up request:', directAxiosError.message);
+          }
+          
+          Logger.debug('Falling back to apiService...');
+          
+          // Debug the final submission object before sending
+          console.log('DEBUG FINAL mappedSubmission:', {
+            primary: {
+              test: mappedSubmission.primaryLanguageTest,
+              speaking: {
+                rawScore: mappedSubmission.primaryTestSpeakingScore,
+                clbScore: mappedSubmission.primaryClbSpeaking,
+                scoreType: typeof mappedSubmission.primaryTestSpeakingScore
+              },
+              listening: {
+                rawScore: mappedSubmission.primaryTestListeningScore,
+                clbScore: mappedSubmission.primaryClbListening,
+                scoreType: typeof mappedSubmission.primaryTestListeningScore
+              },
+              reading: {
+                rawScore: mappedSubmission.primaryTestReadingScore,
+                clbScore: mappedSubmission.primaryClbReading,
+                scoreType: typeof mappedSubmission.primaryTestReadingScore
+              },
+              writing: {
+                rawScore: mappedSubmission.primaryTestWritingScore,
+                clbScore: mappedSubmission.primaryClbWriting,
+                scoreType: typeof mappedSubmission.primaryTestWritingScore
+              }
+            },
+            secondary: mappedSubmission.secondaryLanguageTest ? {
+              test: mappedSubmission.secondaryLanguageTest,
+              speaking: {
+                rawScore: mappedSubmission.secondaryTestSpeakingScore,
+                clbScore: mappedSubmission.secondaryClbSpeaking,
+                scoreType: typeof mappedSubmission.secondaryTestSpeakingScore
+              },
+              listening: {
+                rawScore: mappedSubmission.secondaryTestListeningScore,
+                clbScore: mappedSubmission.secondaryClbListening,
+                scoreType: typeof mappedSubmission.secondaryTestListeningScore
+              },
+              reading: {
+                rawScore: mappedSubmission.secondaryTestReadingScore,
+                clbScore: mappedSubmission.secondaryClbReading,
+                scoreType: typeof mappedSubmission.secondaryTestReadingScore
+              },
+              writing: {
+                rawScore: mappedSubmission.secondaryTestWritingScore,
+                clbScore: mappedSubmission.secondaryClbWriting,
+                scoreType: typeof mappedSubmission.secondaryTestWritingScore
+              }
+            } : 'Not provided',
+            partner: mappedSubmission.partnerLanguageTest ? {
+              test: mappedSubmission.partnerLanguageTest,
+              speaking: {
+                rawScore: mappedSubmission.partnerTestSpeakingScore,
+                clbScore: mappedSubmission.partnerClbSpeaking,
+                scoreType: typeof mappedSubmission.partnerTestSpeakingScore
+              },
+              listening: {
+                rawScore: mappedSubmission.partnerTestListeningScore,
+                clbScore: mappedSubmission.partnerClbListening,
+                scoreType: typeof mappedSubmission.partnerTestListeningScore
+              },
+              reading: {
+                rawScore: mappedSubmission.partnerTestReadingScore,
+                clbScore: mappedSubmission.partnerClbReading,
+                scoreType: typeof mappedSubmission.partnerTestReadingScore
+              },
+              writing: {
+                rawScore: mappedSubmission.partnerTestWritingScore,
+                clbScore: mappedSubmission.partnerClbWriting,
+                scoreType: typeof mappedSubmission.partnerTestWritingScore
+              }
+            } : 'Not provided'
+          });
+          
+          try {
+            // Fall back to apiService
+            response = await apiService.api.post('/profiles', mappedSubmission);
+            Logger.debug('apiService call successful! Response:', response);
+          } catch (apiServiceError) {
+            Logger.error('apiService call also failed:', apiServiceError);
+            throw apiServiceError; // Re-throw to be caught by the main try/catch
+          }
+        }
+        
+        Logger.debug('Form submission successful! Response data:', response.data);
+        
+        // Clear both localStorage and draft storage on success
       clearSavedFormData();
       localStorage.setItem('has_submitted_profile', 'true');
       localStorage.setItem('profile_created_at', new Date().toISOString());
@@ -893,67 +2085,66 @@ const ProfileForm = () => {
         data: response.data
       });
 
-      alert('Your profile has been successfully submitted! Redirecting to dashboard...');
-      setTimeout(() => navigate('/dashboard'), 1500);
-      
-    } catch (err) {
-      console.error('Error submitting profile:', err);
-      
-      // Enhanced error handling
-      if (err.response) {
-        console.error('Response status:', err.response.status);
-        console.error('Response data:', err.response.data);
-        console.error('Response headers:', err.response.headers);
-
-        // Special handling for validation errors from Spring (usually contains errors array)
-        if (err.response.data && err.response.data.errors) {
-          console.error('Validation errors:', err.response.data.errors);
+        // Navigate to dashboard page on success
+        navigate('/dashboard', { state: { profileData: response.data } });
+        
+      } catch (apiError) {
+        Logger.error('API request failed:', apiError);
+        
+        // Log more detailed error information
+        if (apiError.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          Logger.error('Server responded with error:', {
+            status: apiError.response.status,
+            data: apiError.response.data,
+            headers: apiError.response.headers
+          });
           
-          // Build a more user-friendly error message
-          const validationErrors = err.response.data.errors.map(error => 
-            `${error.field || ''}: ${error.defaultMessage || error.message || 'Invalid value'}`
-          );
+          setApiError({
+            status: apiError.response.status,
+            message: `Server error (${apiError.response.status}): ${apiError.response.data.message || 'Unknown error'}`
+          });
           
-          setFormErrors(validationErrors);
-        } else if (err.response.data && err.response.data.message) {
-          // Handle case where there's a single error message
-          setFormErrors([err.response.data.message]);
+          if (apiError.response.status === 401 || apiError.response.status === 403) {
+            setFormErrors(['Your session has expired. Please log in again.']);
         } else {
-          // Generic error based on status
-          setFormErrors([`Server error (${err.response.status}): Please check your submission and try again.`]);
-        }
+            setFormErrors([`Submission failed: ${apiError.response.data.message || 'Server error'}`]);
+          }
+        } else if (apiError.request) {
+          // The request was made but no response was received
+          Logger.error('No response received from server:', apiError.request);
+          setApiError({
+            status: 0,
+            message: 'No response received from server. Please check your internet connection and try again.'
+          });
+          setFormErrors(['No response received from server. Please check your internet connection and try again.']);
       } else {
-        // Network error or other non-response error
-        setFormErrors(['Connection error: Could not reach the server. Please check your internet connection and try again.']);
+          // Something happened in setting up the request that triggered an Error
+          Logger.error('Error setting up request:', apiError.message);
+          setApiError({
+            status: 0,
+            message: `Error: ${apiError.message}`
+          });
+          setFormErrors([`Error: ${apiError.message}`]);
+        }
       }
-      
-      const msg = err.response?.data?.message || err.message || 'Submission failed';
-      const detailErrors = err.response?.data?.errors || [];
-
+    } catch (error) {
+      // Catch any other errors in the overall try block
+      Logger.error('Unexpected error during form submission:', error);
       setApiError({
-        message: msg,
-        details: detailErrors
+        status: 0,
+        message: `Unexpected error: ${error.message}`
       });
+      setFormErrors([`Unexpected error: ${error.message}`]);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // --------------------- VALIDATION SUMMARY --------------------- //
-  // Map section IDs to readable names (used for displaying section names in the validation summary)
-  const sectionNames = {
-    'personal-info': 'Personal Information',
-    'education': 'Education',
-    'language': 'Language Proficiency',
-    'secondary-language': 'Secondary Language',
-    'work-experience': 'Work Experience',
-    'spouse': 'Spouse / Partner',
-    'job-offer': 'Job Offer',
-    'provincial': 'Provincial Nomination',
-    'additional': 'Additional Information'
-  };
-  
   // Generate validation summary from errors
+  // eslint-disable-next-line no-unused-vars
   const generateValidationSummary = (errors) => {
     if (!errors || Object.keys(errors).length === 0) {
       setValidationSummary(null);
@@ -1037,7 +2228,7 @@ const ProfileForm = () => {
       eduInCanada: 'education',
       canadianEducationLevel: 'education',
       hasECA: 'education',
-      tradesCertification: 'education',
+      tradesCertification: 'work-experience',
       
       // Language
       primaryLanguageTest: 'language',
@@ -1180,69 +2371,90 @@ const ProfileForm = () => {
   }
 
   // --------------------- RENDER HELPERS --------------------- //
-  const renderCountryOptions = () => {
-    if (!countries || !Array.isArray(countries)) {
-      return <option value="">Loading countries...</option>;
-    }
-    return (
-      <>
-        <option value="">Select...</option>
-        {countries.map((c, i) => {
-          const name = c.Countries || 'UnknownCountry';
-          return (
-            <option key={`country-${i}-${name}`} value={name}>
-              {name}
-            </option>
-          );
-        })}
-      </>
-    );
-  };
 
-  const renderCityOptions = () => {
-    if (!cities || !Array.isArray(cities)) {
-      return <option value="">Loading cities...</option>;
-    }
-    return (
-      <>
-        <option value="">Select...</option>
-        {cities.map((city, i) => {
-          const cityName = city.City || 'UnknownCity';
-          return (
-            <option key={`city-${i}-${cityName}`} value={cityName}>
-              {cityName}
-            </option>
-          );
-        })}
-      </>
-    );
-  };
 
-  const renderJobOptions = () => {
+
+  // Format jobs data for react-select component
+  const formatJobsForSelect = () => {
     if (!jobs || !Array.isArray(jobs)) {
-      return <option value="">Loading jobs...</option>;
+      return [];
     }
-    return (
-      <>
-        <option value="">Select occupation...</option>
-        {jobs.map((job, i) => {
-          const noc = job.NOC || 'None';
-          const title = job['Job Title'] || 'Unknown Job';
-          return (
-            <option key={`job-${i}-${noc}`} value={noc}>
-              {title} ({noc})
-            </option>
-          );
-        })}
-      </>
-    );
+    return jobs.map((job) => ({
+      value: job.NOC,
+      label: `${job.NOC} - ${job['Job Title']}`
+    }));
+  };
+
+  // Format cities data for react-select component
+  const formatCitiesForSelect = () => {
+    if (!cities || !Array.isArray(cities)) {
+      return [];
+    }
+    return cities.map((city) => ({
+      value: city.City,
+      label: `${city.City}${city.Provinces ? `, ${city.Provinces}` : ''}`
+    }));
+  };
+
+  // Format countries data for react-select component
+  const formatCountriesForSelect = () => {
+    if (!countries || !Array.isArray(countries)) {
+      return [];
+    }
+    return countries.map((country) => ({
+      value: country.Countries,
+      label: country.Countries
+    }));
   };
 
   // Render validation summary
   const renderValidationSummary = (isBottom = false) => {
+    // Don't render anything if validationSummary is null or empty
     if (!validationSummary) return null;
     
-    // Map field IDs to readable names
+    // Check if we're using the new format with showSummary and errors array
+    if (validationSummary.errors && Array.isArray(validationSummary.errors)) {
+      // Don't show anything if there are no errors
+      if (validationSummary.errors.length === 0) return null;
+      
+      // Using new format
+      return (
+        <div className={`validation-summary ${isBottom ? 'bottom' : 'top'}`}>
+          <div className="validation-section">
+            <h4>
+              <span className="section-icon">⚠️</span>
+              <span>Validation Errors</span>
+            </h4>
+            <ul>
+              {validationSummary.errors.map((error, index) => (
+                <li key={index} className="validation-error">
+                  <span className="error-message">{error.message}</span>
+                  {/* Fix href accessibility warning */}
+                  <button 
+                    type="button"
+                    className="goto-field-button"
+                    onClick={() => {
+                      if (error.sectionId) {
+                        scrollToSection(error.sectionId);
+                      }
+                    }}
+                  >
+                    Go to section
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      );
+    }
+    
+    // Original format - skip this part if validationSummary is not an object with entries
+    if (typeof validationSummary !== 'object' || !Object.entries(validationSummary).length) {
+      return null;
+    }
+    
+    // Field names to readable names mapping
     const fieldToReadableName = {
       // Personal Info
       fullName: 'Full Name',
@@ -1301,7 +2513,7 @@ const ProfileForm = () => {
       // Provincial
       provNomination: 'Provincial Nomination',
       provinceInterest: 'Province of Interest',
-      canadianRelatives: 'Canadian Relatives',
+      hasCanadianRelatives: 'Canadian Relatives',
       relativeRelationship: 'Relationship with Canadian',
       receivedITA: 'Received ITA',
       
@@ -1325,7 +2537,7 @@ const ProfileForm = () => {
       eduInCanada: 'education',
       canadianEducationLevel: 'education',
       hasECA: 'education',
-      tradesCertification: 'education',
+      tradesCertification: 'work-experience',
       
       // Language
       primaryLanguageTest: 'language',
@@ -1379,6 +2591,14 @@ const ProfileForm = () => {
       preferredDestination: 'additional'
     };
 
+    // Check if there are any sections with errors
+    const sectionsWithErrors = Object.entries(validationSummary)
+      .filter(([key]) => key !== 'showSummary' && key !== 'errors')
+      .filter(([, errors]) => errors && Array.isArray(errors) && errors.length > 0);
+
+    // Don't show anything if there are no errors
+    if (sectionsWithErrors.length === 0) return null;
+
     return (
       <div className="validation-summary">
         <h3>Please fix the following issues before submitting:</h3>
@@ -1398,7 +2618,7 @@ const ProfileForm = () => {
             Scroll to Top ↑
           </button>
         )}
-        {Object.entries(validationSummary).map(([section, errors]) => (
+        {sectionsWithErrors.map(([section, errors]) => (
           <div key={section} className="validation-summary-section">
             <h4 onClick={() => toggleSection(section)} className="validation-section-header">
               {sectionNames[section] || section}
@@ -1409,11 +2629,11 @@ const ProfileForm = () => {
                 <li key={index} className="validation-error">
                   <span className="field-name">{fieldToReadableName[error.field] || error.field}: </span>
                   <span className="error-message">{error.error}</span>
-                  <a 
-                    href={`#${error.field}`} 
-                    className="goto-field"
-                    onClick={(e) => {
-                      e.preventDefault();
+                  {/* Replace anchor with button for better accessibility */}
+                  <button 
+                    type="button"
+                    className="goto-field-button"
+                    onClick={() => {
                       const element = document.getElementById(error.field);
                       if (element) {
                         // Make sure the section is open
@@ -1428,7 +2648,7 @@ const ProfileForm = () => {
                     }}
                   >
                     Go to field
-                  </a>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -1437,6 +2657,85 @@ const ProfileForm = () => {
       </div>
     );
   };
+
+  // Render custom error messages in form
+  const renderCustomError = (fieldName) => {
+    // Use the errors object from react-hook-form instead of customErrors
+    return errors[fieldName] && <span className="error">{errors[fieldName].message}</span>;
+  };
+
+  // Helper function to scroll to an element by ID
+  const scrollToElementById = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Function to scroll to a specific section
+  const scrollToSection = (sectionId) => {
+    // First, ensure the section is expanded
+    if (!openSections[sectionId]) {
+      toggleSection(sectionId);
+    }
+    
+    // Set error highlights for the section
+    setSectionErrorHighlights(prev => ({
+      ...prev,
+      [sectionId]: true
+    }));
+    
+    // Then scroll to it
+    scrollToElementById(`${sectionId}-content`);
+  };
+
+  // Filter Canadian education options based on highest education level
+  const getCanadianEducationOptions = (highestEducationLevel) => {
+    // Default - show all options
+    const allOptions = [
+      { value: "", label: "Select..." },
+      { value: "secondary-or-less", label: "Secondary (high school) or less" },
+      { value: "one-or-two-year-diploma", label: "1-2 year diploma or certificate" },
+      { value: "degree-3-plus-years", label: "Degree, diploma or certificate of three years or longer OR a Master's, professional or doctoral degree of at least one academic year" }
+    ];
+    
+    // If no highest education selected, return all options
+    if (!highestEducationLevel) {
+      return allOptions;
+    }
+    
+    // Map highest education to maximum allowed Canadian education
+    switch (highestEducationLevel) {
+      case "none-or-less-than-secondary":
+        // Only allow secondary or less
+        return allOptions.filter(opt => opt.value === "" || opt.value === "secondary-or-less");
+        
+      case "secondary-diploma":
+        // Allow secondary or less
+        return allOptions.filter(opt => opt.value === "" || opt.value === "secondary-or-less");
+        
+      case "one-year-program":
+        // Allow up to 1-2 year diploma
+        return allOptions.filter(opt => opt.value === "" || opt.value === "secondary-or-less" || opt.value === "one-or-two-year-diploma");
+        
+      case "two-year-program":
+        // Allow up to 1-2 year diploma
+        return allOptions.filter(opt => opt.value === "" || opt.value === "secondary-or-less" || opt.value === "one-or-two-year-diploma");
+        
+      // All options below can have any Canadian education level
+      case "bachelors-degree":
+      case "two-or-more-certificates":
+      case "masters":
+      case "doctoral":
+        return allOptions;
+        
+      default:
+        return allOptions;
+    }
+  };
+
+  // Language test conversion hooks and helper functions are defined at the top of the component
+
 
   // --------------------- MAIN RETURN --------------------- //
   return (
@@ -1450,18 +2749,50 @@ const ProfileForm = () => {
         onEdit={() => setShowSummaryModal(false)}
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} id="profileForm" className="profile-form" ref={formRef}>
-        <div className="form-intro">
-          <h2>Express Entry Profile</h2>
-          <p>Please fill in your information to determine your eligibility for Canadian immigration programs.</p>
+      {/* Loading state */}
+      {(isLoading || isDraftLoading) && (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <p>Loading your profile data...</p>
         </div>
-        
-        {/* Top Validation Summary */}
-        {validationSummary && (
-          <div className="form-section" id="top-validation-summary">
-            {renderValidationSummary(false)}
+      )}
+      
+      {/* Auto-save status indicator */}
+      <div className="auto-save-status">
+        {isSaving && <span className="saving">Saving draft...</span>}
+        {saveStatus === 'saved' && <span className="saved">Draft saved</span>}
+        {saveStatus === 'error' && <span className="error">Error saving draft</span>}
+        {hasUnsavedChanges && <span className="unsaved">Unsaved changes</span>}
+      </div>
+
+      {/* Top validation summary */}
+      {renderValidationSummary(false)}
+
+      <form onSubmit={handleSubmit(onSubmit)} id="profileForm" className="profile-form" ref={formRef}>
+        <div className="form-container">
+          <h1>Immigration Profile Form</h1>
+          <div className="form-intro">
+            <p>Please fill in your information to determine your eligibility for Canadian immigration programs.</p>
+            
+            <div className="important-message">
+              <div className="important-icon">ⓘ</div>
+              <div className="important-content">
+                <h3>For the Best Immigration Pathway Recommendation</h3>
+                <p>To receive an accurate evaluation and find the best immigration pathway for your unique situation:</p>
+                <ul>
+                  <li>Answer <strong>all questions truthfully</strong> with your actual qualifications and circumstances</li>
+                  <li>Take time to <strong>read all information blocks</strong> <span className="info-icon-inline">ⓘ</span> which contain essential eligibility criteria</li>
+                  <li>Follow the specific instructions for each section to ensure your profile is assessed correctly</li>
+                </ul>
+                <p>The quality and accuracy of your answers directly impact our ability to identify your optimal immigration options.</p>
+              </div>
+            </div>
           </div>
-        )}
+          
+          <div className="required-explanation">
+            Fields marked with <span>*</span> are required.
+          </div>
+        </div>
         
         {/* Form Steps Container */}
         <div className="form-steps-container" style={{ display: 'none' }}>
@@ -1500,7 +2831,7 @@ const ProfileForm = () => {
           <div className="notification error-notification" role="alert" aria-live="assertive">
             <h3>Error</h3>
             <p>{apiError.message}</p>
-            {apiError.details.length > 0 && (
+            {apiError.details && apiError.details.length > 0 && (
               <ul className="error-list">
                 {apiError.details.map((err, index) => (
                   <li key={index}>{err}</li>
@@ -1567,10 +2898,37 @@ const ProfileForm = () => {
                   {...register('fullName', { required: 'Full name is required' })}
                 />
                 {errors.fullName && <span className="error">{errors.fullName.message}</span>}
+                {renderCustomError('fullName')}
               </div>
 
               {/* Age */}
               <div className="form-group">
+                <div className="info-block">
+                  <div 
+                    className="info-header"
+                    onClick={() => toggleInfoBlock('age-info')}
+                  >
+                    <div className="info-title-container">
+                      <span className="info-icon">ⓘ</span>
+                      <h4 className="info-title">About Age Entry</h4>
+                    </div>
+                    <span className="info-chevron">
+                      {openInfoBlocks['age-info'] ? '▲' : '▼'}
+                    </span>
+                  </div>
+                  
+                  {openInfoBlocks['age-info'] && (
+                    <div className="info-content">
+                      <p>Choose the best answer:</p>
+                      <ul>
+                        <li>If you've been invited to apply, enter your age on the date you were invited.</li>
+                        <li className="emphasis">OR</li>
+                        <li>If you plan to complete an Express Entry profile, enter your current age.</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                
                 <label htmlFor="age" className="required-field">
                   Age:
                   <span className="tooltip" data-tooltip="Must be 16 or older.">?</span>
@@ -1582,6 +2940,7 @@ const ProfileForm = () => {
                   {...register('age', { required: 'Age is required' })}
                 />
                 {errors.age && <span className="error">{errors.age.message}</span>}
+                {renderCustomError('age')}
               </div>
 
               {/* Citizenship */}
@@ -1589,13 +2948,27 @@ const ProfileForm = () => {
                 <label htmlFor="citizenship" className="required-field">
                   Country of Citizenship
                 </label>
-                <select
-                  id="citizenship"
-                  {...register('citizenship', { required: 'Citizenship is required' })}
-                >
-                  {renderCountryOptions()}
-                </select>
+                <Controller
+                  name="citizenship"
+                  control={control}
+                  rules={{ required: 'Citizenship is required' }}
+                  render={({ field }) => (
+                    <Select
+                      inputId="citizenship"
+                      options={formatCountriesForSelect()}
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      placeholder="Search and select a country..."
+                      isSearchable={true}
+                      isClearable={true}
+                      value={formatCountriesForSelect().find(option => option.value === field.value) || null}
+                      onChange={(option) => field.onChange(option ? option.value : '')}
+                      onBlur={field.onBlur}
+                    />
+                  )}
+                />
                 {errors.citizenship && <span className="error">{errors.citizenship.message}</span>}
+                {renderCustomError('citizenship')}
               </div>
 
               {/* Residence */}
@@ -1603,13 +2976,27 @@ const ProfileForm = () => {
                 <label htmlFor="residence" className="required-field">
                   Country of Residence
                 </label>
-                <select
-                  id="residence"
-                  {...register('residence', { required: 'Residence is required' })}
-                >
-                  {renderCountryOptions()}
-                </select>
+                <Controller
+                  name="residence"
+                  control={control}
+                  rules={{ required: 'Residence is required' }}
+                  render={({ field }) => (
+                    <Select
+                      inputId="residence"
+                      options={formatCountriesForSelect()}
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      placeholder="Search and select a country..."
+                      isSearchable={true}
+                      isClearable={true}
+                      value={formatCountriesForSelect().find(option => option.value === field.value) || null}
+                      onChange={(option) => field.onChange(option ? option.value : '')}
+                      onBlur={field.onBlur}
+                    />
+                  )}
+                />
                 {errors.residence && <span className="error">{errors.residence.message}</span>}
+                {renderCustomError('residence')}
               </div>
 
               {/* Marital Status */}
@@ -1641,7 +3028,75 @@ const ProfileForm = () => {
                   <label htmlFor="maritalCommon">Common-Law</label>
                 </div>
                 {errors.maritalStatus && <span className="error">{errors.maritalStatus.message}</span>}
+                {renderCustomError('maritalStatus')}
               </div>
+
+              {/* Show these questions only if user is Married or Common-Law */}
+              {(watch('maritalStatus') === 'Married' || watch('maritalStatus') === 'Common-Law') && (
+                <>
+                  {/* Spouse is Canadian Citizen or PR */}
+                  <div className="form-group">
+                    <label htmlFor="spouseIsPR" className="required-field">
+                      Is your spouse a Canadian citizen or permanent resident?
+                      <span 
+                        className="tooltip" 
+                        data-tooltip="If your spouse is a Canadian citizen or permanent resident, you'll be assessed as a single applicant for CRS score purposes."
+                      >?</span>
+                    </label>
+                    <div className="pill-radio-group">
+                      <input
+                        type="radio"
+                        id="spouseIsPRYes"
+                        value="yes"
+                        {...register('spouseIsPR', { required: 'This field is required' })}
+                      />
+                      <label htmlFor="spouseIsPRYes">Yes</label>
+
+                      <input
+                        type="radio"
+                        id="spouseIsPRNo"
+                        value="no"
+                        {...register('spouseIsPR')}
+                      />
+                      <label htmlFor="spouseIsPRNo">No</label>
+                    </div>
+                    {errors.spouseIsPR && <span className="error">{errors.spouseIsPR.message}</span>}
+                    {renderCustomError('spouseIsPR')}
+                  </div>
+
+                  {/* Only show the accompanying question if spouse is not a Canadian citizen/PR */}
+                  {watch('spouseIsPR') === 'no' && (
+                    <div className="form-group">
+                      <label htmlFor="spouseIsAccompanying" className="required-field">
+                        Will your spouse/partner accompany you to Canada?
+                        <span 
+                          className="tooltip" 
+                          data-tooltip="If your spouse will not accompany you to Canada, you'll be assessed as a single applicant for CRS score purposes."
+                        >?</span>
+                      </label>
+                      <div className="pill-radio-group">
+                        <input
+                          type="radio"
+                          id="spouseIsAccompanyingYes"
+                          value="yes"
+                          {...register('spouseIsAccompanying', { required: 'This field is required' })}
+                        />
+                        <label htmlFor="spouseIsAccompanyingYes">Yes</label>
+
+                        <input
+                          type="radio"
+                          id="spouseIsAccompanyingNo"
+                          value="no"
+                          {...register('spouseIsAccompanying')}
+                        />
+                        <label htmlFor="spouseIsAccompanyingNo">No</label>
+                      </div>
+                      {errors.spouseIsAccompanying && <span className="error">{errors.spouseIsAccompanying.message}</span>}
+                      {renderCustomError('spouseIsAccompanying')}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>
@@ -1674,46 +3129,103 @@ const ProfileForm = () => {
 
           {openSections['education'] && (
             <div className="section-content" id="education-content">
+              {/* Highest level of education */}
               <div className="form-group">
+                <div className="info-block">
+                  <div 
+                    className="info-header"
+                    onClick={() => toggleInfoBlock('education-level-info')}
+                  >
+                    <div className="info-title-container">
+                      <span className="info-icon">ⓘ</span>
+                      <h4 className="info-title">Education Level Guidelines</h4>
+                    </div>
+                    <span className="info-chevron">
+                      {openInfoBlocks['education-level-info'] ? '▲' : '▼'}
+                    </span>
+                  </div>
+                  
+                  {openInfoBlocks['education-level-info'] && (
+                    <div className="info-content">
+                      <p>Enter the highest level of education for which you:</p>
+                      <ul>
+                        <li>earned a Canadian degree, diploma or certificate <strong className="emphasis">or</strong></li>
+                        <li>had an Educational Credential Assessment (ECA) if you did your study outside Canada. (ECAs must be from an approved agency, in the last five years)</li>
+                      </ul>
+                      <p className="note"><strong>Note:</strong> a Canadian degree, diploma or certificate must either have been earned at an accredited Canadian university, college, trade or technical school, or other institute in Canada. Distance learning counts for education points, but not for bonus points in your profile or application.</p>
+                    </div>
+                  )}
+                </div>
+                
                 <label htmlFor="educationLevel" className="required-field">Highest Level of Education:</label>
                 <select
                   id="educationLevel"
                   {...register('educationLevel', { required: 'Education level is required' })}
                 >
                   <option value="">Select...</option>
-                  <option value="none-or-less-than-secondary">None or less than high school</option>
-                  <option value="secondary-diploma">High school diploma</option>
-                  <option value="one-year-program">One-year program</option>
-                  <option value="two-year-program">Two-year program</option>
-                  <option value="bachelors-degree">Bachelor's degree (3+ yrs)</option>
-                  <option value="two-or-more-certificates">Two+ credentials</option>
-                  <option value="masters">Master's degree or professional degree</option>
-                  <option value="doctoral">PhD</option>
+                  <option value="none-or-less-than-secondary">None, or less than secondary (high school)</option>
+                  <option value="secondary-diploma">Secondary diploma (high school graduation)</option>
+                  <option value="one-year-program">One-year program at a university, college, trade or technical school, or other institute</option>
+                  <option value="two-year-program">Two-year program at a university, college, trade or technical school, or other institute</option>
+                  <option value="bachelors-degree">Bachelor's degree (three or more year program at a university, college, trade or technical school, or other institute)</option>
+                  <option value="two-or-more-certificates">Two or more certificates, diplomas or degrees. One must be for a program of three or more years</option>
+                  <option value="masters">Master's degree, or professional degree needed to practice in a licensed profession (see Help)</option>
+                  <option value="doctoral">Doctoral level university degree (PhD)</option>
                 </select>
                 {errors.educationLevel && <span className="error">{errors.educationLevel.message}</span>}
+                {renderCustomError('educationLevel')}
               </div>
 
               {/* Education in Canada? */}
               <div className="form-group">
-                <label className="required-field">Was your education completed in Canada?</label>
+                <div className="info-block">
+                  <div 
+                    className="info-header"
+                    onClick={() => toggleInfoBlock('study-canada-info')}
+                  >
+                    <div className="info-title-container">
+                      <span className="info-icon">ⓘ</span>
+                      <h4 className="info-title">Study in Canada Requirements</h4>
+                    </div>
+                    <span className="info-chevron">
+                      {openInfoBlocks['study-canada-info'] ? '▲' : '▼'}
+                    </span>
+                  </div>
+                  
+                  {openInfoBlocks['study-canada-info'] && (
+                    <div className="info-content">
+                      <p className="note"><strong>Note:</strong> To answer yes, you must meet ALL of these conditions:</p>
+                      <ul>
+                        <li>English or French as a Second Language must not have made up more than half your study</li>
+                        <li>You must not have studied under an award that required you to return to your home country after graduation to apply your skills and knowledge</li>
+                        <li>You must have studied at a school within Canada (foreign campuses don't count)</li>
+                        <li>You had to be enrolled full time for at least eight months, unless you completed the study or training program (in whole or in part) between March 2020 and August 2022</li>
+                        <li>You had to have been physically present in Canada for at least eight months, unless you completed the study or training program (in whole or in part) between March 2020 and August 2022</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                
+                <label className="required-field">Do you have any education completed in Canada?</label>
                 <div className="pill-radio-group">
-                  <input
-                    type="radio"
+                  <input 
+                    type="radio" 
                     id="eduYes"
-                    value="yes"
+                    value="yes" 
                     {...register('eduInCanada', { required: true })}
                   />
                   <label htmlFor="eduYes">Yes</label>
 
-                  <input
-                    type="radio"
+                  <input 
+                    type="radio" 
                     id="eduNo"
-                    value="no"
+                    value="no" 
                     {...register('eduInCanada')}
                   />
                   <label htmlFor="eduNo">No</label>
                 </div>
                 {errors.eduInCanada && <span className="error">This field is required.</span>}
+                {renderCustomError('eduInCanada')}
               </div>
 
               {watchAllFields.eduInCanada === 'yes' && (
@@ -1725,12 +3237,14 @@ const ProfileForm = () => {
                     id="canadianEducationLevel"
                     {...register('canadianEducationLevel', { required: 'Specify your Canadian education level' })}
                   >
-                    <option value="">Select...</option>
-                    <option value="secondary-or-less">Secondary or less</option>
-                    <option value="one-or-two-year-diploma">1-2 year diploma/certificate</option>
-                    <option value="degree-3-plus-years">3+ year degree/diploma or higher</option>
+                    {getCanadianEducationOptions(watchAllFields.educationLevel).map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                   {errors.canadianEducationLevel && <span className="error">{errors.canadianEducationLevel.message}</span>}
+                  {renderCustomError('canadianEducationLevel')}
                 </div>
               )}
 
@@ -1755,29 +3269,7 @@ const ProfileForm = () => {
                   <label htmlFor="hasECANo">No</label>
                 </div>
                 {errors.hasECA && <span className="error">This field is required.</span>}
-              </div>
-
-              {/* Trades Certification */}
-              <div className="form-group">
-                <label className="required-field">Do you have a trades certification?</label>
-                <div className="pill-radio-group">
-                  <input
-                    type="radio"
-                    id="tradesYes"
-                    value="yes"
-                    {...register('tradesCertification', { required: true })}
-                  />
-                  <label htmlFor="tradesYes">Yes</label>
-
-                  <input
-                    type="radio"
-                    id="tradesNo"
-                    value="no"
-                    {...register('tradesCertification')}
-                  />
-                  <label htmlFor="tradesNo">No</label>
-                </div>
-                {errors.tradesCertification && <span className="error">This field is required.</span>}
+                {renderCustomError('hasECA')}
               </div>
             </div>
           )}
@@ -1811,6 +3303,29 @@ const ProfileForm = () => {
 
           {openSections['language'] && (
             <div className="section-content" id="language-content">
+              <div className="info-block">
+                <div 
+                  className="info-header"
+                  onClick={() => toggleInfoBlock('language-requirements-info')}
+                >
+                  <div className="info-title-container">
+                    <span className="info-icon">ⓘ</span>
+                    <h4 className="info-title">Language Test Requirements</h4>
+                  </div>
+                  <span className="info-chevron">
+                    {openInfoBlocks['language-requirements-info'] ? '▲' : '▼'}
+                  </span>
+                </div>
+                
+                {openInfoBlocks['language-requirements-info'] && (
+                  <div className="info-content">
+                    <p><strong className="emphasis">Official languages:</strong> Canada's official languages are English and French.</p>
+                    <p>You need to submit language test results that are less than two years old for all programs under Express Entry, <strong>even if English or French is your first language</strong>.</p>
+                    <p className="note"><strong>Note:</strong> Valid tests must be a maximum of 2 years old from the date of application.</p>
+                  </div>
+                )}
+              </div>
+
               <div className="form-group">
                 <label htmlFor="primaryLanguageTest" className="required-field">
                   Primary Language Test:
@@ -1838,6 +3353,7 @@ const ProfileForm = () => {
                     {getScoreRangeDescription(watch('primaryLanguageTest'))}
                   </div>
                 )}
+                {renderCustomError('primaryLanguageTest')}
               </div>
 
               {/* Speaking */}
@@ -1850,13 +3366,14 @@ const ProfileForm = () => {
                   {...register('speaking', { required: 'Speaking score is required' })}
                 >
                   <option value="">Select...</option>
-                  {getScoreOptions(watch('primaryLanguageTest'), 'speaking').map(option => (
+                  {getTestScoreOptions(watch('primaryLanguageTest'), 'speaking').map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
                     </option>
                   ))}
                 </select>
                 {errors.speaking && <span className="error">{errors.speaking.message}</span>}
+                {renderCustomError('speaking')}
               </div>
 
               {/* Listening */}
@@ -1869,13 +3386,14 @@ const ProfileForm = () => {
                   {...register('listening', { required: 'Listening score is required' })}
                 >
                   <option value="">Select...</option>
-                  {getScoreOptions(watch('primaryLanguageTest'), 'listening').map(option => (
+                  {getTestScoreOptions(watch('primaryLanguageTest'), 'listening').map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
                     </option>
                   ))}
                 </select>
                 {errors.listening && <span className="error">{errors.listening.message}</span>}
+                {renderCustomError('listening')}
               </div>
 
               {/* Reading */}
@@ -1888,13 +3406,14 @@ const ProfileForm = () => {
                   {...register('reading', { required: 'Reading score is required' })}
                 >
                   <option value="">Select...</option>
-                  {getScoreOptions(watch('primaryLanguageTest'), 'reading').map(option => (
+                  {getTestScoreOptions(watch('primaryLanguageTest'), 'reading').map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
                     </option>
                   ))}
                 </select>
                 {errors.reading && <span className="error">{errors.reading.message}</span>}
+                {renderCustomError('reading')}
               </div>
 
               {/* Writing */}
@@ -1907,13 +3426,14 @@ const ProfileForm = () => {
                   {...register('writing', { required: 'Writing score is required' })}
                 >
                   <option value="">Select...</option>
-                  {getScoreOptions(watch('primaryLanguageTest'), 'writing').map(option => (
+                  {getTestScoreOptions(watch('primaryLanguageTest'), 'writing').map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
                     </option>
                   ))}
                 </select>
                 {errors.writing && <span className="error">{errors.writing.message}</span>}
+                {renderCustomError('writing')}
               </div>
             </div>
           )}
@@ -1947,6 +3467,30 @@ const ProfileForm = () => {
 
           {openSections['secondary-language'] && (
             <div className="section-content" id="secondary-language-content">
+              <div className="info-block">
+                <div 
+                  className="info-header"
+                  onClick={() => toggleInfoBlock('secondary-language-info')}
+                >
+                  <div className="info-title-container">
+                    <span className="info-icon">ⓘ</span>
+                    <h4 className="info-title">Secondary Language Benefits</h4>
+                  </div>
+                  <span className="info-chevron">
+                    {openInfoBlocks['secondary-language-info'] ? '▲' : '▼'}
+                  </span>
+                </div>
+                
+                {openInfoBlocks['secondary-language-info'] && (
+                  <div className="info-content">
+                    <p>Providing test results for your second official language can earn you additional points in the Comprehensive Ranking System (CRS).</p>
+                    <p>If your first language is English, you can submit French test results as your second language, and vice versa.</p>
+                    <p className="note"><strong>Note:</strong> The same 2-year validity period applies to secondary language tests.</p>
+                    <p className="warning"><strong>Important:</strong> You cannot claim points for two tests in the same language. For example, if you took both IELTS and CELPIP (both English tests), you must choose only one.</p>
+                  </div>
+                )}
+              </div>
+
               <div className="form-group">
                 <label htmlFor="secondaryLangTest">Did you take a second language test?</label>
                 <select id="secondaryLangTest" {...register('secondaryLangTest')}>
@@ -1964,11 +3508,15 @@ const ProfileForm = () => {
                       {...register('secondaryLanguageTest', { required: 'Select your secondary language test' })}
                     >
                       <option value="">Select...</option>
-                      <option value="CELPIP">CELPIP-G</option>
-                      <option value="IELTS">IELTS</option>
-                      <option value="PTE">PTE Core</option>
-                      <option value="TEF">TEF Canada</option>
-                      <option value="TCF">TCF Canada</option>
+                      {watch('primaryLanguageTest') ? (
+                        // Display only tests in a different language than the primary test
+                        getSecondaryTestOptions(watch('primaryLanguageTest')).map(option => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))
+                      ) : (
+                        // If no primary test is selected yet, show a disabled message
+                        <option value="" disabled>Select primary test first</option>
+                      )}
                     </select>
                     {errors.secondaryLanguageTest && <span className="error">{errors.secondaryLanguageTest.message}</span>}
                     {watch('secondaryLanguageTest') && (
@@ -1976,6 +3524,7 @@ const ProfileForm = () => {
                         {getScoreRangeDescription(watch('secondaryLanguageTest'))}
                       </div>
                     )}
+                    {renderCustomError('secondaryLanguageTest')}
                   </div>
 
                   {/* Scores */}
@@ -1985,13 +3534,14 @@ const ProfileForm = () => {
                     </label>
                     <select id="secSpeaking" {...register('secSpeaking', { required: true })}>
                       <option value="">Select...</option>
-                      {getScoreOptions(watch('secondaryLanguageTest'), 'speaking').map(option => (
+                      {getTestScoreOptions(watch('secondaryLanguageTest'), 'speaking').map(option => (
                         <option key={option.value} value={option.value}>
                           {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
                         </option>
                       ))}
                     </select>
                     {errors.secSpeaking && <span className="error">This field is required</span>}
+                    {renderCustomError('secSpeaking')}
                   </div>
 
                   <div className="form-group">
@@ -2000,13 +3550,14 @@ const ProfileForm = () => {
                     </label>
                     <select id="secListening" {...register('secListening', { required: true })}>
                       <option value="">Select...</option>
-                      {getScoreOptions(watch('secondaryLanguageTest'), 'listening').map(option => (
+                      {getTestScoreOptions(watch('secondaryLanguageTest'), 'listening').map(option => (
                         <option key={option.value} value={option.value}>
                           {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
                         </option>
                       ))}
                     </select>
                     {errors.secListening && <span className="error">This field is required</span>}
+                    {renderCustomError('secListening')}
                   </div>
 
                   <div className="form-group">
@@ -2015,13 +3566,14 @@ const ProfileForm = () => {
                     </label>
                     <select id="secReading" {...register('secReading', { required: true })}>
                       <option value="">Select...</option>
-                      {getScoreOptions(watch('secondaryLanguageTest'), 'reading').map(option => (
+                      {getTestScoreOptions(watch('secondaryLanguageTest'), 'reading').map(option => (
                         <option key={option.value} value={option.value}>
                           {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
                         </option>
                       ))}
                     </select>
                     {errors.secReading && <span className="error">This field is required</span>}
+                    {renderCustomError('secReading')}
                   </div>
 
                   <div className="form-group">
@@ -2030,13 +3582,14 @@ const ProfileForm = () => {
                     </label>
                     <select id="secWriting" {...register('secWriting', { required: true })}>
                       <option value="">Select...</option>
-                      {getScoreOptions(watch('secondaryLanguageTest'), 'writing').map(option => (
+                      {getTestScoreOptions(watch('secondaryLanguageTest'), 'writing').map(option => (
                         <option key={option.value} value={option.value}>
                           {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
                         </option>
                       ))}
                     </select>
                     {errors.secWriting && <span className="error">This field is required</span>}
+                    {renderCustomError('secWriting')}
                   </div>
                 </>
               )}
@@ -2072,10 +3625,35 @@ const ProfileForm = () => {
 
           {openSections['work-experience'] && (
             <div className="section-content" id="work-experience-content">
-              {/* Canadian Experience */}
+              {/* Canadian Work Experience */}
+              <div className="info-block">
+                <div 
+                  className="info-header"
+                  onClick={() => toggleInfoBlock('canadian-work-info')}
+                >
+                  <div className="info-title-container">
+                    <span className="info-icon">ⓘ</span>
+                    <h4 className="info-title">Canadian Work Experience Requirements</h4>
+                  </div>
+                  <span className="info-chevron">
+                    {openInfoBlocks['canadian-work-info'] ? '▲' : '▼'}
+                  </span>
+                </div>
+                
+                {openInfoBlocks['canadian-work-info'] && (
+                  <div className="info-content">
+                    <p>In the last 10 years, how many years of skilled work experience in Canada do you have?</p>
+                    <p>It must have been <strong className="emphasis">paid and full-time</strong> (or an equal amount in part-time).</p>
+                    <p>You must have been physically in Canada and working for a Canadian employer. This includes remote work.</p>
+                    <p className="note"><strong>Note:</strong> "Skilled work" in the NOC is TEER 0, 1, 2 or 3 category jobs.</p>
+                    <p>If you aren't sure of the NOC TEER category for your job, you can find your NOC by searching the <a href="https://noc.esdc.gc.ca/?GoCTemplateCulture=en-CA" target="_blank" rel="noopener noreferrer" className="emphasis-link">official government classification</a>.</p>
+                  </div>
+                )}
+              </div>
+
               <div className="form-group">
-                <label htmlFor="canadianExp" className="required-field">Canadian Work Experience (years)</label>
-                <select id="canadianExp" {...register('canadianExp', { required: 'This field is required' })}>
+                <label htmlFor="canadianExp" className="required-field">Canadian Work Experience (years) in the last 10 years</label>
+                <select id="canadianExp" {...register('canadianExp', { required: true })}>
                   <option value="">Select...</option>
                   <option value="0">None or &lt;1 year</option>
                   <option value="1">1 year</option>
@@ -2084,64 +3662,156 @@ const ProfileForm = () => {
                   <option value="4">4 years</option>
                   <option value="5">5+ years</option>
                 </select>
-                {errors.canadianExp && <span className="error">{errors.canadianExp.message}</span>}
-              </div>
-              <div className="form-group">
-                <label htmlFor="nocCodeCanadian">NOC Code for Canadian Work</label>
-                <select id="nocCodeCanadian" {...register('nocCodeCanadian')}>
-                  <option value="">Select...</option>
-                  {renderJobOptions()}
-                </select>
+                {errors.canadianExp && <span className="error">This field is required.</span>}
+                {renderCustomError('canadianExp')}
               </div>
 
-              {/* Foreign Experience */}
+              {watchAllFields.canadianExp > 0 && (
+                <div className="form-group">
+                  <label htmlFor="nocCodeCanadian" className="required-field">Canadian NOC Code</label>
+                  <Controller
+                    name="nocCodeCanadian"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <Select
+                        inputId="nocCodeCanadian"
+                        options={formatJobsForSelect()}
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                        placeholder="Search and select a NOC code..."
+                        isSearchable={true}
+                        isClearable={true}
+                        value={formatJobsForSelect().find(option => option.value === parseInt(field.value)) || null}
+                        onChange={(option) => field.onChange(option ? option.value : '')}
+                        onBlur={field.onBlur}
+                      />
+                    )}
+                  />
+                  {errors.nocCodeCanadian && <span className="error">This field is required.</span>}
+                  {renderCustomError('nocCodeCanadian')}
+                </div>
+              )}
+
+              {/* Foreign Work Experience */}
+              <div className="info-block">
+                <div 
+                  className="info-header"
+                  onClick={() => toggleInfoBlock('foreign-work-info')}
+                >
+                  <div className="info-title-container">
+                    <span className="info-icon">ⓘ</span>
+                    <h4 className="info-title">Foreign Work Experience Requirements</h4>
+                  </div>
+                  <span className="info-chevron">
+                    {openInfoBlocks['foreign-work-info'] ? '▲' : '▼'}
+                  </span>
+                </div>
+                
+                {openInfoBlocks['foreign-work-info'] && (
+                  <div className="info-content">
+                    <p>In the last 10 years, how many total years of foreign skilled work experience do you have?</p>
+                    <p>It must have been <strong className="emphasis">paid, full-time</strong> (or an equal amount in part-time), and in only one occupation (NOC TEER category 0, 1, 2 or 3).</p>
+                  </div>
+                )}
+              </div>
+
               <div className="form-group">
-                <label htmlFor="foreignExp" className="required-field">Foreign Work Experience (years)</label>
-                <select id="foreignExp" {...register('foreignExp', { required: 'This field is required' })}>
+                <label htmlFor="foreignExp" className="required-field">Foreign Work Experience (years) in the last 10 years</label>
+                <select id="foreignExp" {...register('foreignExp', { required: true })}>
                   <option value="">Select...</option>
                   <option value="0">None or &lt;1 year</option>
                   <option value="1">1 year</option>
                   <option value="2">2 years</option>
                   <option value="3">3+ years</option>
                 </select>
-                {errors.foreignExp && <span className="error">{errors.foreignExp.message}</span>}
-              </div>
-              <div className="form-group">
-                <label htmlFor="nocCodeForeign">NOC Code for Foreign Work</label>
-                <select id="nocCodeForeign" {...register('nocCodeForeign')}>
-                  {renderJobOptions()}
-                </select>
+                {errors.foreignExp && <span className="error">This field is required.</span>}
+                {renderCustomError('foreignExp')}
               </div>
 
-              {/* Working in Canada */}
+              {watchAllFields.foreignExp > 0 && (
+                <div className="form-group">
+                  <label htmlFor="nocCodeForeign" className="required-field">Foreign NOC Code</label>
+                  <Controller
+                    name="nocCodeForeign"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <Select
+                        inputId="nocCodeForeign"
+                        options={formatJobsForSelect()}
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                        placeholder="Search and select a NOC code..."
+                        isSearchable={true}
+                        isClearable={true}
+                        value={formatJobsForSelect().find(option => option.value === parseInt(field.value)) || null}
+                        onChange={(option) => field.onChange(option ? option.value : '')}
+                        onBlur={field.onBlur}
+                      />
+                    )}
+                  />
+                  {errors.nocCodeForeign && <span className="error">This field is required.</span>}
+                  {renderCustomError('nocCodeForeign')}
+                </div>
+              )}
+
+              {/* Trades Certification - Moved from Education section */}
+              <div className="info-block">
+                <div 
+                  className="info-header"
+                  onClick={() => toggleInfoBlock('trades-certification-info')}
+                >
+                  <div className="info-title-container">
+                    <span className="info-icon">ⓘ</span>
+                    <h4 className="info-title">Certificate of Qualification Information</h4>
+                  </div>
+                  <span className="info-chevron">
+                    {openInfoBlocks['trades-certification-info'] ? '▲' : '▼'}
+                  </span>
+                </div>
+                
+                {openInfoBlocks['trades-certification-info'] && (
+                  <div className="info-content">
+                    <p>Do you have a certificate of qualification from a Canadian province, territory or federal body?</p>
+                    <p className="note"><strong>Note:</strong> A certificate of qualification lets people work in some skilled trades in Canada. Only the provinces, territories and a federal body can issue these certificates. To get one, a person must have them assess their training, trade experience and skills to and then pass a certification exam.</p>
+                    <p>People usually have to go to the province or territory to be assessed. They may also need experience and training from an employer in Canada.</p>
+                    <p className="warning"><strong>Important:</strong> This isn't the same as a nomination from a province or territory.</p>
+                  </div>
+                )}
+              </div>
+
               <div className="form-group">
-                <label className="required-field">Are you currently working in Canada?</label>
+                <label className="required-field">Do you have a trades certification?</label>
                 <div className="pill-radio-group">
                   <input
                     type="radio"
-                    id="insideCanadaYes"
+                    id="tradesYes"
                     value="yes"
-                    {...register('workInsideCanada', { required: true })}
+                    {...register('tradesCertification', { required: true })}
                   />
-                  <label htmlFor="insideCanadaYes">Yes</label>
+                  <label htmlFor="tradesYes">Yes</label>
 
                   <input
                     type="radio"
-                    id="insideCanadaNo"
+                    id="tradesNo"
                     value="no"
-                    {...register('workInsideCanada')}
+                    {...register('tradesCertification')}
                   />
-                  <label htmlFor="insideCanadaNo">No</label>
+                  <label htmlFor="tradesNo">No</label>
                 </div>
-                {errors.workInsideCanada && <span className="error">This field is required.</span>}
+                {errors.tradesCertification && <span className="error">This field is required.</span>}
+                {renderCustomError('tradesCertification')}
               </div>
             </div>
           )}
         </div>
 
         {/* ---------------- SPOUSE / COMMON-LAW SECTION ---------------- */}
-        {(watchAllFields.maritalStatus === 'married' ||
-          watchAllFields.maritalStatus === 'common-law') && (
+        {(watchAllFields.maritalStatus?.toLowerCase() === 'married' ||
+          watchAllFields.maritalStatus?.toLowerCase() === 'common-law') && 
+          watchAllFields.spouseIsPR === 'no' && 
+          watchAllFields.spouseIsAccompanying === 'yes' && (
           <div className="collapsible-section" id="spouseSection">
             <button
               type="button"
@@ -2169,6 +3839,33 @@ const ProfileForm = () => {
 
             {openSections['spouse'] && (
               <div className="section-content" id="spouse-content">
+                <div className="info-block">
+                  <div 
+                    className="info-header"
+                    onClick={() => toggleInfoBlock('partner-education-info')}
+                  >
+                    <div className="info-title-container">
+                      <span className="info-icon">ⓘ</span>
+                      <h4 className="info-title">Spouse's Education Requirements</h4>
+                    </div>
+                    <span className="info-chevron">
+                      {openInfoBlocks['partner-education-info'] ? '▲' : '▼'}
+                    </span>
+                  </div>
+                  
+                  {openInfoBlocks['partner-education-info'] && (
+                    <div className="info-content">
+                      <p>What is the highest level of education for which your spouse or common-law partner has:</p>
+                      <ul>
+                        <li>earned a Canadian degree, diploma or certificate <strong className="emphasis">or</strong></li>
+                        <li>had an Educational Credential Assessment (ECA)? (ECAs must be from an approved agency, in the last five years)</li>
+                      </ul>
+                      <p className="note"><strong>Note:</strong> To get the correct number of points, make sure you choose the answer that best reflects your case. For example:</p>
+                      <p>If your spouse has TWO Bachelor's degrees, or one Bachelor's AND a two year college diploma, choose – "Two or more certificates, diplomas, or degrees. One must be for a program of three or more years."</p>
+                    </div>
+                  )}
+                </div>
+                
                 <div className="form-group">
                   <label htmlFor="partnerEducation" className="required-field">Spouse's Highest Education</label>
                   <select id="partnerEducation" {...register('partnerEducation', { required: true })}>
@@ -2183,6 +3880,31 @@ const ProfileForm = () => {
                     <option value="doctoral">PhD</option>
                   </select>
                 </div>
+
+                <div className="info-block">
+                  <div 
+                    className="info-header"
+                    onClick={() => toggleInfoBlock('partner-language-info')}
+                  >
+                    <div className="info-title-container">
+                      <span className="info-icon">ⓘ</span>
+                      <h4 className="info-title">Partner Language Requirements</h4>
+                    </div>
+                    <span className="info-chevron">
+                      {openInfoBlocks['partner-language-info'] ? '▲' : '▼'}
+                    </span>
+                  </div>
+                  
+                  {openInfoBlocks['partner-language-info'] && (
+                    <div className="info-content">
+                      <p>Your spouse or common-law partner's language proficiency can earn you additional points in the Comprehensive Ranking System (CRS).</p>
+                      <p>The same language tests and scoring criteria apply to your spouse or partner as they do to you.</p>
+                      <p className="note"><strong>Note:</strong> For your spouse's language ability to be counted, they must take an approved language test and meet at least CLB 4 level in all abilities (reading, writing, speaking, listening).</p>
+                      <p>If your spouse hasn't taken a language test, or doesn't meet CLB 4 in all abilities, select "No test taken" from the dropdown - you won't lose points, but won't gain the additional points either.</p>
+                    </div>
+                  )}
+                </div>
+                
                 <div className="form-group">
                   <label htmlFor="partnerLanguageTest" className="required-field">Spouse's Language Test</label>
                   <select
@@ -2195,67 +3917,95 @@ const ProfileForm = () => {
                     <option value="PTE">PTE Core</option>
                     <option value="TEF">TEF Canada</option>
                     <option value="TCF">TCF Canada</option>
+                    <option value="none">No test taken</option>
                   </select>
-                  {watch('partnerLanguageTest') && (
+                  {watch('partnerLanguageTest') && watch('partnerLanguageTest') !== 'none' && (
                     <div className="score-range-info">
                       {getScoreRangeDescription(watch('partnerLanguageTest'))}
                     </div>
                   )}
                 </div>
 
-                {/* Spouse language scores */}
-                <div className="form-group">
-                  <label htmlFor="partnerSpeaking" className="required-field">
-                    Speaking {watch('partnerLanguageTest') ? '' : '(CLB)'}
-                  </label>
-                  <select id="partnerSpeaking" {...register('partnerSpeaking', { required: true })}>
-                    <option value="">Select...</option>
-                    {getScoreOptions(watch('partnerLanguageTest'), 'speaking').map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
-                      </option>
-                    ))}
-                  </select>
+                {/* Spouse language scores - only show if a test is selected and it's not "none" */}
+                {watch('partnerLanguageTest') && watch('partnerLanguageTest') !== 'none' && (
+                  <>
+                    <div className="form-group">
+                      <label htmlFor="partnerSpeaking" className="required-field">
+                        Speaking {watch('partnerLanguageTest') ? '' : '(CLB)'}
+                      </label>
+                      <select id="partnerSpeaking" {...register('partnerSpeaking', { required: true })}>
+                        <option value="">Select...</option>
+                        {getTestScoreOptions(watch('partnerLanguageTest'), 'speaking').map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="partnerListening" className="required-field">
+                        Listening {watch('partnerLanguageTest') ? '' : '(CLB)'}
+                      </label>
+                      <select id="partnerListening" {...register('partnerListening', { required: true })}>
+                        <option value="">Select...</option>
+                        {getTestScoreOptions(watch('partnerLanguageTest'), 'listening').map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="partnerReading" className="required-field">
+                        Reading {watch('partnerLanguageTest') ? '' : '(CLB)'}
+                      </label>
+                      <select id="partnerReading" {...register('partnerReading', { required: true })}>
+                        <option value="">Select...</option>
+                        {getTestScoreOptions(watch('partnerLanguageTest'), 'reading').map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="partnerWriting" className="required-field">
+                        Writing {watch('partnerLanguageTest') ? '' : '(CLB)'}
+                      </label>
+                      <select id="partnerWriting" {...register('partnerWriting', { required: true })}>
+                        <option value="">Select...</option>
+                        {getTestScoreOptions(watch('partnerLanguageTest'), 'writing').map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+                <div className="info-block">
+                  <div 
+                    className="info-header"
+                    onClick={() => toggleInfoBlock('partner-work-info')}
+                  >
+                    <div className="info-title-container">
+                      <span className="info-icon">ⓘ</span>
+                      <h4 className="info-title">Spouse Canadian Work Experience</h4>
+                    </div>
+                    <span className="info-chevron">
+                      {openInfoBlocks['partner-work-info'] ? '▲' : '▼'}
+                    </span>
+                  </div>
+                  
+                  {openInfoBlocks['partner-work-info'] && (
+                    <div className="info-content">
+                      <p>In the last 10 years, how many years of skilled work experience in Canada does your spouse/common-law partner have?</p>
+                      <p>It must have been <strong className="emphasis">paid, full-time</strong> (or an equal amount in part-time), and in one or more NOC TEER category 0, 1, 2, or 3 jobs.</p>
+                      <p className="note"><strong>Note:</strong> Only count work experience from after your spouse completed their education. Work as part of a study program, such as a co-op term, doesn't count.</p>
+                    </div>
+                  )}
                 </div>
-                <div className="form-group">
-                  <label htmlFor="partnerListening" className="required-field">
-                    Listening {watch('partnerLanguageTest') ? '' : '(CLB)'}
-                  </label>
-                  <select id="partnerListening" {...register('partnerListening', { required: true })}>
-                    <option value="">Select...</option>
-                    {getScoreOptions(watch('partnerLanguageTest'), 'listening').map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="partnerReading" className="required-field">
-                    Reading {watch('partnerLanguageTest') ? '' : '(CLB)'}
-                  </label>
-                  <select id="partnerReading" {...register('partnerReading', { required: true })}>
-                    <option value="">Select...</option>
-                    {getScoreOptions(watch('partnerLanguageTest'), 'reading').map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="partnerWriting" className="required-field">
-                    Writing {watch('partnerLanguageTest') ? '' : '(CLB)'}
-                  </label>
-                  <select id="partnerWriting" {...register('partnerWriting', { required: true })}>
-                    <option value="">Select...</option>
-                    {getScoreOptions(watch('partnerLanguageTest'), 'writing').map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label} {option.clb !== undefined ? `(CLB ${option.clb})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                
                 <div className="form-group">
                   <label htmlFor="partnerCanadianExp" className="required-field">Spouse Canadian Work Experience (years)</label>
                   <select id="partnerCanadianExp" {...register('partnerCanadianExp', { required: true })}>
@@ -2301,14 +4051,48 @@ const ProfileForm = () => {
 
           {openSections['job-offer'] && (
             <div className="section-content" id="job-offer-content">
+              <div className="info-block">
+                <div 
+                  className="info-header"
+                  onClick={() => toggleInfoBlock('job-offer-info')}
+                >
+                  <div className="info-title-container">
+                    <span className="info-icon">ⓘ</span>
+                    <h4 className="info-title">Valid Job Offer Requirements</h4>
+                  </div>
+                  <span className="info-chevron">
+                    {openInfoBlocks['job-offer-info'] ? '▲' : '▼'}
+                  </span>
+                </div>
+                
+                {openInfoBlocks['job-offer-info'] && (
+                  <div className="info-content">
+                    <p>Do you have a valid job offer supported by a Labour Market Impact Assessment (if needed)?</p>
+                    <p>A valid job offer must be:</p>
+                    <ul>
+                      <li>full-time</li>
+                      <li>in a skilled job listed as TEER 0, 1, 2 or 3 in the 2021 National Occupational Classification</li>
+                      <li>supported by a Labour Market Impact Assessment (LMIA) or exempt from needing one</li>
+                      <li>for one year from the time you become a permanent resident</li>
+                    </ul>
+                    <p className="warning"><strong>Important:</strong> A job offer isn't valid if your employer is:</p>
+                    <ul>
+                      <li>an embassy, high commission or consulate in Canada or</li>
+                      <li>on the list of ineligible employers.</li>
+                    </ul>
+                    <p>Whether an offer is valid or not also depends on different factors, depending on your case.</p>
+                  </div>
+                )}
+              </div>
+
               <div className="form-group">
-                <label className="required-field">Do you have a valid Canadian job offer?</label>
+                <label htmlFor="jobOffer" className="required-field">Do you have a valid job offer?</label>
                 <div className="pill-radio-group">
                   <input
                     type="radio"
                     id="jobOfferYes"
                     value="yes"
-                    {...register('jobOffer', { required: 'This field is required' })}
+                    {...register('jobOffer', { required: true })}
                   />
                   <label htmlFor="jobOfferYes">Yes</label>
 
@@ -2320,66 +4104,105 @@ const ProfileForm = () => {
                   />
                   <label htmlFor="jobOfferNo">No</label>
                 </div>
-                {errors.jobOffer && <span className="error">{errors.jobOffer.message}</span>}
+                {errors.jobOffer && <span className="error">This field is required.</span>}
+                {renderCustomError('jobOffer')}
               </div>
 
               {watchAllFields.jobOffer === 'yes' && (
                 <>
-                  <div className="form-group">
-                    <label htmlFor="lmiaStatus" className="required-field">
-                      LMIA-approved?
-                      <span
-                        className="tooltip"
-                        data-tooltip="LMIA: Labour Market Impact Assessment"
-                      >
-                        ?
+                  <div className="info-block">
+                    <div 
+                      className="info-header"
+                      onClick={() => toggleInfoBlock('noc-teer-info')}
+                    >
+                      <div className="info-title-container">
+                        <span className="info-icon">ⓘ</span>
+                        <h4 className="info-title">NOC TEER Categories</h4>
+                      </div>
+                      <span className="info-chevron">
+                        {openInfoBlocks['noc-teer-info'] ? '▲' : '▼'}
                       </span>
-                    </label>
+                    </div>
+                    
+                    {openInfoBlocks['noc-teer-info'] && (
+                      <div className="info-content">
+                        <p>Which NOC TEER is the job offer?</p>
+                        <p>If you don't know your job's TEER classification, you can find it by searching the <a href="https://noc.esdc.gc.ca/?GoCTemplateCulture=en-CA" target="_blank" rel="noopener noreferrer" className="emphasis-link">official NOC classification</a>.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="jobOfferNocCode" className="required-field">NOC Code</label>
+                    <Controller
+                      name="jobOfferNocCode"
+                      control={control}
+                      rules={{ required: true }}
+                      render={({ field }) => (
+                        <Select
+                          inputId="jobOfferNocCode"
+                          options={formatJobsForSelect()}
+                          className="react-select-container"
+                          classNamePrefix="react-select"
+                          placeholder="Search and select a NOC code..."
+                          isSearchable={true}
+                          isClearable={true}
+                          value={formatJobsForSelect().find(option => option.value === parseInt(field.value)) || null}
+                          onChange={(option) => field.onChange(option ? option.value : '')}
+                          onBlur={field.onBlur}
+                        />
+                      )}
+                    />
+                    {errors.jobOfferNocCode && <span className="error">This field is required.</span>}
+                    {renderCustomError('jobOfferNocCode')}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="lmiaStatus" className="required-field">LMIA Status</label>
                     <select id="lmiaStatus" {...register('lmiaStatus', { required: true })}>
                       <option value="">Select...</option>
-                      <option value="yes">Yes</option>
-                      <option value="no">No</option>
+                      <option value="approved">LMIA Approved</option>
+                      <option value="exempt">LMIA Exempt</option>
+                      <option value="none">No LMIA</option>
                     </select>
+                    {errors.lmiaStatus && <span className="error">This field is required.</span>}
+                    {renderCustomError('lmiaStatus')}
                   </div>
+
                   <div className="form-group">
-                    <label htmlFor="jobWage" className="required-field">
-                      Job Wage (CAD per hour)
-                      <span
-                        className="tooltip"
-                        data-tooltip="Hourly wage, e.g. 35. Must meet median wage for NOC."
-                      >
-                        ?
-                      </span>
-                    </label>
+                    <label htmlFor="jobWage" className="required-field">Wage (CAD $ / hour)</label>
                     <input
                       type="number"
                       id="jobWage"
-                      placeholder="e.g., 35"
+                      min="0"
+                      step="0.01"
                       {...register('jobWage', { required: true })}
                     />
+                    {errors.jobWage && <span className="error">This field is required.</span>}
+                    {renderCustomError('jobWage')}
                   </div>
+
                   <div className="form-group">
-                    <label htmlFor="jobOfferNocCode" className="required-field">Job Offer NOC Code</label>
-                    <select id="jobOfferNocCode" {...register('jobOfferNocCode', { required: true })}>
-                      {renderJobOptions()}
-                    </select>
+                    <label htmlFor="weeklyHours" className="required-field">Hours per week</label>
+                    <input
+                      type="number"
+                      id="weeklyHours"
+                      min="0"
+                      step="0.5"
+                      {...register('weeklyHours', { required: true })}
+                    />
+                    {errors.weeklyHours && <span className="error">This field is required.</span>}
+                    {renderCustomError('weeklyHours')}
                   </div>
+
                   <div className="form-group">
-                    <label htmlFor="weeklyHours" className="required-field">Weekly Work Hours</label>
-                    <select id="weeklyHours" {...register('weeklyHours', { required: true })}>
-                      <option value="">Select...</option>
-                      <option value="casual">Casual (~under 15 hrs/week)</option>
-                      <option value="part-time">Part-time (15-30 hrs/week)</option>
-                      <option value="full-time">Full-time (30+ hrs/week)</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="jobDetails" className="required-field">Brief Job Description</label>
+                    <label htmlFor="jobDetails">Job Title & Description</label>
                     <textarea
                       id="jobDetails"
-                      rows={3}
-                      {...register('jobDetails', { required: true })}
-                    />
+                      rows="3"
+                      placeholder="Enter your job title and brief description"
+                      {...register('jobDetails')}
+                    ></textarea>
                   </div>
                 </>
               )}
@@ -2415,46 +4238,175 @@ const ProfileForm = () => {
 
           {openSections['provincial'] && (
             <div className="section-content" id="provincial-content">
+              <div className="info-block">
+                <div 
+                  className="info-header"
+                  onClick={() => toggleInfoBlock('provincial-nomination-info')}
+                >
+                  <div className="info-title-container">
+                    <span className="info-icon">ⓘ</span>
+                    <h4 className="info-title">Provincial Nomination Information</h4>
+                  </div>
+                  <span className="info-chevron">
+                    {openInfoBlocks['provincial-nomination-info'] ? '▲' : '▼'}
+                  </span>
+                </div>
+                
+                {openInfoBlocks['provincial-nomination-info'] && (
+                  <div className="info-content">
+                    <p>A Provincial Nomination can significantly increase your chances of receiving an invitation to apply for permanent residence through Express Entry.</p>
+                    <p>To answer "Yes" to the provincial nomination question, you must have received a nomination certificate from a Canadian province or territory through one of their Provincial Nominee Programs (PNPs).</p>
+                    <p className="note"><strong>Note:</strong> A provincial nomination is different from an expression of interest in a specific province. You must have an actual nomination certificate from a provincial or territorial government.</p>
+                    <p>If you have a provincial nomination, you'll automatically receive 600 additional points in the Comprehensive Ranking System (CRS).</p>
+                  </div>
+                )}
+              </div>
+
               <div className="form-group">
-                <label className="required-field">Do you have a Provincial Nomination?</label>
+                <label htmlFor="provNomination" className="required-field">
+                  Do you have a Provincial Nomination?
+                  <span
+                    className="tooltip"
+                    data-tooltip="A provincial nomination is an official certificate from a Canadian province/territory under their Provincial Nominee Program (PNP). Having one adds 600 points to your CRS score."
+                  >
+                    ?
+                  </span>
+                </label>
                 <div className="pill-radio-group">
                   <input
                     type="radio"
-                    id="provYes"
+                    id="provNominationYes"
                     value="yes"
                     {...register('provNomination', { required: true })}
                   />
-                  <label htmlFor="provYes">Yes</label>
+                  <label htmlFor="provNominationYes">Yes</label>
 
                   <input
                     type="radio"
-                    id="provNo"
+                    id="provNominationNo"
                     value="no"
                     {...register('provNomination')}
                   />
-                  <label htmlFor="provNo">No</label>
+                  <label htmlFor="provNominationNo">No</label>
                 </div>
+                {errors.provNomination && <span className="error">This field is required.</span>}
+                {renderCustomError('provNomination')}
               </div>
 
               <div className="form-group">
-                <label htmlFor="provinceInterest" className="required-field">Province or Territory of Interest</label>
+                <label htmlFor="provinceInterest" className="required-field">Province of Interest</label>
                 <select id="provinceInterest" {...register('provinceInterest', { required: true })}>
                   <option value="">Select...</option>
-                  <option value="Ontario">Ontario</option>
-                  <option value="British Columbia">British Columbia</option>
                   <option value="Alberta">Alberta</option>
+                  <option value="British Columbia">British Columbia</option>
                   <option value="Manitoba">Manitoba</option>
-                  <option value="Saskatchewan">Saskatchewan</option>
-                  <option value="Nova Scotia">Nova Scotia</option>
                   <option value="New Brunswick">New Brunswick</option>
+                  <option value="Newfoundland and Labrador">Newfoundland and Labrador</option>
+                  <option value="Nova Scotia">Nova Scotia</option>
+                  <option value="Ontario">Ontario</option>
                   <option value="Prince Edward Island">Prince Edward Island</option>
+                  <option value="Quebec">Quebec</option>
+                  <option value="Saskatchewan">Saskatchewan</option>
                   <option value="Yukon">Yukon</option>
                   <option value="Northwest Territories">Northwest Territories</option>
+                  <option value="Nunavut">Nunavut</option>
+                  <option value="Undecided">Undecided</option>
                 </select>
+                {errors.provinceInterest && <span className="error">This field is required.</span>}
+                {renderCustomError('provinceInterest')}
+              </div>
+
+              <div className="info-block">
+                <div 
+                  className="info-header"
+                  onClick={() => toggleInfoBlock('ita-info')}
+                >
+                  <div className="info-title-container">
+                    <span className="info-icon">ⓘ</span>
+                    <h4 className="info-title">Invitation to Apply (ITA) Information</h4>
+                  </div>
+                  <span className="info-chevron">
+                    {openInfoBlocks['ita-info'] ? '▲' : '▼'}
+                  </span>
+                </div>
+                
+                {openInfoBlocks['ita-info'] && (
+                  <div className="info-content">
+                    <p>An Invitation to Apply (ITA) is a formal notification from Immigration, Refugees and Citizenship Canada (IRCC) inviting you to submit an application for permanent residence through Express Entry.</p>
+                    <p>ITAs are issued to candidates in the Express Entry pool who meet the minimum points threshold in a specific draw.</p>
+                    <p className="note"><strong>Note:</strong> If you have received an ITA, you typically have 60 days to submit a complete application for permanent residence.</p>
+                    <p className="warning"><strong>Important:</strong> An ITA is different from a provincial nomination or other expressions of interest. It is the official invitation from IRCC to apply for permanent residence.</p>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
-                <label className="required-field">Do you have Canadian relatives (citizens or PR)?</label>
+                <label htmlFor="receivedITA" className="required-field">
+                  Have you received an ITA (Invitation to Apply)?
+                  <span
+                    className="tooltip"
+                    data-tooltip="An Invitation to Apply (ITA) is the official invitation from Immigration, Refugees and Citizenship Canada to submit your permanent residence application after being selected from the Express Entry pool."
+                  >
+                    ?
+                  </span>
+                </label>
+                <div className="pill-radio-group">
+                  <input
+                    type="radio"
+                    id="receivedITAYes"
+                    value="yes"
+                    {...register('receivedITA', { required: true })}
+                  />
+                  <label htmlFor="receivedITAYes">Yes</label>
+
+                  <input
+                    type="radio"
+                    id="receivedITANo"
+                    value="no"
+                    {...register('receivedITA')}
+                  />
+                  <label htmlFor="receivedITANo">No</label>
+                </div>
+                {errors.receivedITA && <span className="error">This field is required.</span>}
+                {renderCustomError('receivedITA')}
+              </div>
+
+              <div className="info-block">
+                <div 
+                  className="info-header"
+                  onClick={() => toggleInfoBlock('canadian-relatives-info')}
+                >
+                  <div className="info-title-container">
+                    <span className="info-icon">ⓘ</span>
+                    <h4 className="info-title">Canadian Relatives Information</h4>
+                  </div>
+                  <span className="info-chevron">
+                    {openInfoBlocks['canadian-relatives-info'] ? '▲' : '▼'}
+                  </span>
+                </div>
+                
+                {openInfoBlocks['canadian-relatives-info'] && (
+                  <div className="info-content">
+                    <p>Having close relatives in Canada who are citizens or permanent residents may give you additional points in your Express Entry profile.</p>
+                    <p>To answer "Yes" to this question, you or your spouse/common-law partner must have at least one brother or sister living in Canada who is a citizen or permanent resident.</p>
+                    <p className="note"><strong>Note:</strong> To qualify, the brother or sister must be:</p>
+                    <ul>
+                      <li>18 years old or older</li>
+                      <li>related to you or your partner by blood, marriage, common-law partnership or adoption</li>
+                      <li>have a parent in common with you or your partner</li>
+                    </ul>
+                    <p>A brother or sister is related to you by:</p>
+                    <ul>
+                      <li>blood (biological)</li>
+                      <li>adoption</li>
+                      <li>marriage (step-brother or step-sister)</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="canadianRelatives" className="required-field">Do you have Canadian Relatives?</label>
                 <div className="pill-radio-group">
                   <input
                     type="radio"
@@ -2472,45 +4424,29 @@ const ProfileForm = () => {
                   />
                   <label htmlFor="relativesNo">No</label>
                 </div>
+                {errors.canadianRelatives && <span className="error">This field is required.</span>}
+                {renderCustomError('canadianRelatives')}
               </div>
+
               {watchAllFields.canadianRelatives === 'yes' && (
                 <div className="form-group">
                   <label htmlFor="relativeRelationship" className="required-field">
-                    Relationship
+                    Relationship with Canadian Relative
                   </label>
-                  <select
-                    id="relativeRelationship"
-                    {...register('relativeRelationship', { required: 'Please specify relationship' })}
-                  >
+                  <select id="relativeRelationship" {...register('relativeRelationship', { required: true })}>
                     <option value="">Select...</option>
-                    <option value="sibling">Sibling</option>
+                    <option value="brother-sister">Brother/Sister</option>
                     <option value="parent">Parent</option>
                     <option value="grandparent">Grandparent</option>
-                    <option value="other">Other</option>
+                    <option value="child">Child (18+ years old)</option>
+                    <option value="aunt-uncle">Aunt/Uncle</option>
+                    <option value="cousin">Cousin</option>
+                    <option value="niece-nephew">Niece/Nephew</option>
                   </select>
+                  {errors.relativeRelationship && <span className="error">This field is required.</span>}
+                  {renderCustomError('relativeRelationship')}
                 </div>
               )}
-
-              <div className="form-group">
-                <label className="required-field">Have you received an ITA (Invitation to Apply)?</label>
-                <div className="pill-radio-group">
-                  <input
-                    type="radio"
-                    id="itaYes"
-                    value="yes"
-                    {...register('receivedITA', { required: true })}
-                  />
-                  <label htmlFor="itaYes">Yes</label>
-
-                  <input
-                    type="radio"
-                    id="itaNo"
-                    value="no"
-                    {...register('receivedITA')}
-                  />
-                  <label htmlFor="itaNo">No</label>
-                </div>
-              </div>
             </div>
           )}
         </div>
@@ -2543,48 +4479,135 @@ const ProfileForm = () => {
 
           {openSections['additional'] && (
             <div className="section-content" id="additional-content">
+              <div className="info-block">
+                <div 
+                  className="info-header"
+                  onClick={() => toggleInfoBlock('preferred-destination-info')}
+                >
+                  <div className="info-title-container">
+                    <span className="info-icon">ⓘ</span>
+                    <h4 className="info-title">Preferred Destination Information</h4>
+                  </div>
+                  <span className="info-chevron">
+                    {openInfoBlocks['preferred-destination-info'] ? '▲' : '▼'}
+                  </span>
+                </div>
+                
+                {openInfoBlocks['preferred-destination-info'] && (
+                  <div className="info-content">
+                    <p>Telling us your preferred destination in Canada helps us recommend the best immigration programs for your specific interests.</p>
+                    <p>While this information doesn't affect your CRS score, different provinces and cities have unique immigration streams that may benefit you based on your profile and preferences.</p>
+                    <p className="note"><strong>Note:</strong> This information is optional but highly recommended to help us provide tailored immigration pathway recommendations.</p>
+                  </div>
+                )}
+              </div>
+
               <div className="form-group">
-                <label htmlFor="settlementFunds" className="required-field">
-                  Settlement Funds (CAD)
+                <label htmlFor="prefDestProvince">
+                  Preferred Destination (Province)
                   <span
                     className="tooltip"
-                    data-tooltip="Total unencumbered funds available to support yourself/family."
+                    data-tooltip="Select the province you're planning to live in so we can recommend the best programs for your needs"
                   >
                     ?
                   </span>
                 </label>
-                <input
-                  type="number"
-                  id="settlementFunds"
-                  {...register('settlementFunds', { required: true })}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="preferredCity">Preferred City</label>
-                <select id="preferredCity" {...register('preferredCity')}>
-                  {renderCityOptions()}
-                </select>
-              </div>
-              <div className="form-group">
-                <label htmlFor="preferredDestination" className="required-field">
-                  Preferred Destination (Province)
-                </label>
-                <select
-                  id="preferredDestination"
-                  {...register('preferredDestination', { required: true })}
-                >
+                <select id="prefDestProvince" {...register('prefDestProvince')}>
                   <option value="">Select...</option>
-                  <option value="Ontario">Ontario</option>
-                  <option value="British Columbia">British Columbia</option>
                   <option value="Alberta">Alberta</option>
+                  <option value="British Columbia">British Columbia</option>
                   <option value="Manitoba">Manitoba</option>
-                  <option value="Saskatchewan">Saskatchewan</option>
-                  <option value="Nova Scotia">Nova Scotia</option>
                   <option value="New Brunswick">New Brunswick</option>
+                  <option value="Newfoundland and Labrador">Newfoundland and Labrador</option>
+                  <option value="Nova Scotia">Nova Scotia</option>
+                  <option value="Ontario">Ontario</option>
                   <option value="Prince Edward Island">Prince Edward Island</option>
+                  <option value="Quebec">Quebec</option>
+                  <option value="Saskatchewan">Saskatchewan</option>
                   <option value="Yukon">Yukon</option>
                   <option value="Northwest Territories">Northwest Territories</option>
+                  <option value="Nunavut">Nunavut</option>
+                  <option value="Undecided">Undecided</option>
                 </select>
+                {renderCustomError('prefDestProvince')}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="prefDestCity">
+                  Preferred Destination (City)
+                  <span
+                    className="tooltip"
+                    data-tooltip="Indicate your preferred city to help us identify local immigration programs and opportunities"
+                  >
+                    ?
+                  </span>
+                </label>
+                <Controller
+                  name="prefDestCity"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      inputId="prefDestCity"
+                      options={formatCitiesForSelect()}
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      placeholder="Search and select a city..."
+                      isSearchable={true}
+                      isClearable={true}
+                      value={formatCitiesForSelect().find(option => option.value === field.value) || null}
+                      onChange={(option) => field.onChange(option ? option.value : '')}
+                      onBlur={field.onBlur}
+                    />
+                  )}
+                />
+                {renderCustomError('prefDestCity')}
+              </div>
+
+              <div className="info-block">
+                <div 
+                  className="info-header"
+                  onClick={() => toggleInfoBlock('settlement-funds-info')}
+                >
+                  <div className="info-title-container">
+                    <span className="info-icon">ⓘ</span>
+                    <h4 className="info-title">Settlement Funds Information</h4>
+                  </div>
+                  <span className="info-chevron">
+                    {openInfoBlocks['settlement-funds-info'] ? '▲' : '▼'}
+                  </span>
+                </div>
+                
+                {openInfoBlocks['settlement-funds-info'] && (
+                  <div className="info-content">
+                    <p>Settlement funds are financial resources you'll need to establish yourself in Canada. While not a CRS requirement for Express Entry candidates with valid job offers or those already working in Canada, many immigration programs require proof of sufficient funds.</p>
+                    <p>Different provinces have varying minimum settlement fund requirements for their Provincial Nominee Programs (PNPs).</p>
+                    <p>Providing this information helps us identify the best immigration pathways based on your financial readiness.</p>
+                    <p className="note"><strong>Note:</strong> For Express Entry without a job offer, the required settlement funds are based on family size and updated annually. For a single applicant, the amount is approximately $13,310 CAD (as of 2023).</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="settlementFunds">
+                  Settlement Funds (CAD)
+                  <span
+                    className="tooltip"
+                    data-tooltip="The amount of money available to support your settlement in Canada"
+                  >
+                    ?
+                  </span>
+                </label>
+                <select id="settlementFunds" {...register('settlementFunds')}>
+                  <option value="">Select...</option>
+                  <option value="Less than $10,000">Less than $10,000</option>
+                  <option value="$10,000 - $15,000">$10,000 - $15,000</option>
+                  <option value="$15,001 - $20,000">$15,001 - $20,000</option>
+                  <option value="$20,001 - $25,000">$20,001 - $25,000</option>
+                  <option value="$25,001 - $50,000">$25,001 - $50,000</option>
+                  <option value="$50,001 - $100,000">$50,001 - $100,000</option>
+                  <option value="More than $100,000">More than $100,000</option>
+                </select>
+                {renderCustomError('settlementFunds')}
               </div>
             </div>
           )}
@@ -2604,6 +4627,14 @@ const ProfileForm = () => {
           </button>
         </div>
       </form>
+
+      {/* Add ValidationSummary modal */}
+      <ValidationSummary 
+        isOpen={validationSummary.showSummary}
+        onClose={() => setValidationSummary({ ...validationSummary, showSummary: false })}
+        errors={validationSummary.errors}
+        scrollToSection={scrollToSection}
+      />
     </div>
   );
 };

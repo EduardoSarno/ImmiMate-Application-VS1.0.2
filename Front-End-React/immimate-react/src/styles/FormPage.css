@@ -591,4 +591,317 @@ select {
 .submit-container .error-display li {
   margin-bottom: 8px;
   font-size: 1rem;
+}
+
+/* Add these styles for the form explanations */
+.form-explanation {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: rgba(240, 240, 240, 0.5);
+  border-left: 3px solid var(--primary-color);
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.form-explanation p {
+  margin-bottom: 0.5rem;
+}
+
+.form-explanation p:last-child {
+  margin-bottom: 0;
+}
+
+.explanation-list {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.explanation-list li {
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
+}
+
+.explanation-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Info blocks for explanations above form fields - updated for collapsible functionality */
+.info-block {
+  margin-bottom: 1.25rem;
+  background-color: #f8f9fa;
+  border-left: 4px solid var(--primary-color);
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.info-header:hover {
+  background-color: rgba(26, 192, 255, 0.05);
+}
+
+.info-title-container {
+  display: flex;
+  align-items: center;
+}
+
+.info-icon {
+  color: var(--primary-color);
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.info-title {
+  color: var(--primary-color);
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.info-chevron {
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  transition: transform 0.3s ease;
+}
+
+.info-content {
+  padding: 0 1rem 1rem 1rem;
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.info-block p {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.info-block ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.info-block li {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.info-block li:last-child {
+  margin-bottom: 0;
+}
+
+.info-block .emphasis {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.info-block .note {
+  font-size: 0.9rem;
+  color: #555;
+  padding: 0.75rem;
+  margin-top: 0.75rem;
+  background-color: rgba(255, 246, 235, 0.7);
+  border-left: 3px solid #ff9800;
+  border-radius: 3px;
+}
+
+.info-block .note strong {
+  color: #ff9800;
+}
+
+/* Add a warning style for critical information */
+.info-block .warning {
+  font-size: 0.9rem;
+  padding: 0.75rem;
+  margin-top: 0.75rem;
+  background-color: rgba(255, 235, 238, 0.7);
+  border-left: 3px solid #f44336;
+  border-radius: 3px;
+  color: #d32f2f;
+}
+
+.info-block .warning strong {
+  color: #d32f2f;
+}
+
+/* Style for links in info blocks */
+.info-block a.emphasis-link {
+  color: var(--primary-color);
+  text-decoration: underline;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.info-block a.emphasis-link:hover {
+  color: #0088cc;
+  text-decoration: underline;
+}
+
+/* React Select styling */
+.react-select-container {
+  width: 100%;
+  font-family: inherit;
+  z-index: 10;
+  position: relative;
+}
+
+.react-select__control {
+  border-radius: 4px !important;
+  border: 1px solid #ccc !important;
+  box-shadow: none !important;
+  min-height: 38px !important;
+  background-color: white !important;
+}
+
+.react-select__control:hover {
+  border-color: var(--primary-color) !important;
+}
+
+.react-select__control--is-focused {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 1px var(--primary-color) !important;
+}
+
+.react-select__menu {
+  z-index: 100 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+  background-color: white !important;
+}
+
+.react-select__option {
+  padding: 8px 12px !important;
+  background-color: white !important;
+  color: #333 !important;
+}
+
+.react-select__option--is-selected {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+.react-select__option--is-focused:not(.react-select__option--is-selected) {
+  background-color: rgba(0, 119, 200, 0.1) !important;
+  color: #333 !important;
+}
+
+.react-select__placeholder {
+  color: #999 !important;
+}
+
+.react-select__indicator-separator {
+  background-color: #ccc !important;
+}
+
+.react-select__input-container {
+  color: #333 !important;
+}
+
+.react-select__value-container {
+  background-color: white !important;
+}
+
+.react-select__single-value {
+  color: #333 !important;
+}
+
+/* Ensure the react-select dropdown is always visible and not affected by section styling */
+.form-group {
+  position: relative;
+}
+
+/* Override any background colors from parent sections */
+.section-content .react-select__control,
+.section-content .react-select__menu,
+.section-content .react-select__option {
+  background-color: white !important;
+}
+
+/* Style for work experience section header to have blue background */
+.collapsible-section button.section-header.active {
+  background-color: #1ac0ff;
+  color: #fff;
+}
+
+/* Specifically target the work experience section */
+#work-experience-content {
+  background-color: #fff;
+  border-top: 1px solid #ddd;
+}
+
+/* Important message styling */
+.important-message {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background-color: rgba(26, 192, 255, 0.08);
+  border-left: 5px solid #1ac0ff;
+  border-radius: 6px;
+  display: flex;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.important-icon {
+  font-size: 2rem;
+  color: #1ac0ff;
+  margin-right: 1rem;
+  font-weight: bold;
+  display: flex;
+  align-items: flex-start;
+}
+
+.important-content {
+  flex: 1;
+}
+
+.important-content h3 {
+  color: #1ac0ff;
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1.3rem;
+}
+
+.important-content p {
+  margin: 0.75rem 0;
+  line-height: 1.5;
+  color: #333;
+  font-size: 1rem;
+}
+
+.important-content ul {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.important-content li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+  color: #333;
+}
+
+.important-content strong {
+  color: #0088cc;
+}
+
+.info-icon-inline {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  background-color: #1ac0ff;
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  margin: 0 3px;
+  vertical-align: middle;
 } 

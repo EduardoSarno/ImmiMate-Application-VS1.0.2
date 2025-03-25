@@ -109,11 +109,17 @@ public class UserImmigrationProfile {
     @Column(nullable = false)
     private Integer nocCodeCanadian;
     
+    @Column
+    private Integer canadianOccupationTeerCategory;
+    
     @Column(nullable = false)
     private int foreignWorkExperienceYears;
     
-    @Column(nullable = false)
-    private String nocCodeForeign;
+    @Column
+    private Integer nocCodeForeign;
+    
+    @Column
+    private Integer foreignOccupationTeerCategory;
     
     @Column(nullable = false)
     private boolean workingInCanada;
@@ -163,6 +169,9 @@ public class UserImmigrationProfile {
     @Column
     private Integer partnerCanadianWorkExperienceYears;
     
+    @Column
+    private Integer spouseOccupationTeerCategory;
+    
     @Column(nullable = false)
     private boolean hasJobOffer;
     
@@ -173,7 +182,10 @@ public class UserImmigrationProfile {
     private Integer jobOfferWageCad;
     
     @Column
-    private String jobOfferNocCode;
+    private Integer jobOfferNocCode;
+    
+    @Column
+    private Integer jobofferOccupationTeerCategory;
     
     @Column(name = "trades_certification")
     private Boolean tradesCertification;

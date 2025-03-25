@@ -30,10 +30,30 @@ public class TestDataInitializer {
         
         private final UserRepository userRepository;
         private final PasswordEncoder passwordEncoder;
+        private final String testUserEmail;
+        private final String newUserEmail;
         
         public TestDataService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
             this.userRepository = userRepository;
             this.passwordEncoder = passwordEncoder;
+            // Generate random emails for this test session
+            this.testUserEmail = TestConstants.generateTestUserEmail();
+            this.newUserEmail = TestConstants.generateNewUserEmail();
+            System.out.println("⚡ Initialized TestDataService with primary email: " + testUserEmail);
+        }
+        
+        /**
+         * Returns the test user email for this test session
+         */
+        public String getTestUserEmail() {
+            return testUserEmail;
+        }
+        
+        /**
+         * Returns the new user email for this test session
+         */
+        public String getNewUserEmail() {
+            return newUserEmail;
         }
         
         /**
@@ -49,27 +69,31 @@ public class TestDataInitializer {
          * This preserves all other data and table structures
          */
         private void cleanTestData() {
-            // Only delete specific test users by email
-            userRepository.findByEmail(TestConstants.TEST_USER_EMAIL)
-                .ifPresent(user -> userRepository.delete(user));
-            userRepository.findByEmail(TestConstants.NEW_USER_EMAIL)
-                .ifPresent(user -> userRepository.delete(user));
-                
-            // Log that we're only cleaning specific test data
-            System.out.println("✅ Cleaned specific test data without dropping tables");
+            try {
+                // We don't need to clean any specific users since we're using random emails
+                // But we'll log it for clarity
+                System.out.println("✅ Using random emails for test users, no cleanup needed");
+            } catch (Exception e) {
+                System.err.println("⚠️ Error with test data preparation: " + e.getMessage());
+            }
         }
         
         private void createTestUsers() {
-            // Create main test user
-            User testUser = new User();
-            testUser.setEmail(TestConstants.TEST_USER_EMAIL);
-            testUser.setPassword(passwordEncoder.encode(TestConstants.TEST_USER_PASSWORD));
-            testUser.setPhoneNumber(TestConstants.TEST_USER_PHONE);
-            testUser.setFirstName(TestConstants.TEST_USER_FIRST_NAME);
-            testUser.setLastName(TestConstants.TEST_USER_LAST_NAME);
-            testUser.setRole("USER");
-            
-            userRepository.save(testUser);
+            try {
+                // Create main test user with random email
+                User testUser = new User();
+                testUser.setEmail(testUserEmail);
+                testUser.setPassword(passwordEncoder.encode(TestConstants.TEST_USER_PASSWORD));
+                testUser.setPhoneNumber(TestConstants.TEST_USER_PHONE);
+                testUser.setFirstName(TestConstants.TEST_USER_FIRST_NAME);
+                testUser.setLastName(TestConstants.TEST_USER_LAST_NAME);
+                testUser.setRole("USER");
+                
+                userRepository.save(testUser);
+                System.out.println("✅ Created test user: " + testUser.getEmail());
+            } catch (Exception e) {
+                System.err.println("⚠️ Error creating test user: " + e.getMessage());
+            }
         }
     }
 } 

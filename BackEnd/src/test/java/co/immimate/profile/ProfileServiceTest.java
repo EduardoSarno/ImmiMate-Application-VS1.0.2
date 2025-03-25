@@ -4,8 +4,6 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.persistence.EntityManager;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,9 +39,7 @@ class ProfileServiceTest {
     
     @Mock
     private UserRepository userRepository;
-    
-    @Mock
-    private EntityManager entityManager;
+
     
     @InjectMocks
     private ProfileService profileService;
@@ -56,9 +52,12 @@ class ProfileServiceTest {
     private User testUser;
     private UserImmigrationProfile testProfile;
     private ProfileSubmissionRequest testRequest;
+
+    public ProfileServiceTest() {
+    }
     
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         // Create test user
         testUser = new User();
         testUser.setId(TEST_USER_ID);
@@ -141,7 +140,7 @@ class ProfileServiceTest {
         profile.setCanadianWorkExperienceYears(2);
         profile.setNocCodeCanadian(21223);
         profile.setForeignWorkExperienceYears(5);
-        profile.setNocCodeForeign("21223");
+        profile.setNocCodeForeign(21223);
         profile.setWorkingInCanada(true);
         
         // Partner information
@@ -164,7 +163,7 @@ class ProfileServiceTest {
         profile.setHasJobOffer(true);
         profile.setIsJobOfferLmiaApproved(true);
         profile.setJobOfferWageCad(75000);
-        profile.setJobOfferNocCode("21223");
+        profile.setJobOfferNocCode(21223);
         
         // Additional information
         profile.setSettlementFundsCad(25000);
@@ -221,7 +220,7 @@ class ProfileServiceTest {
         request.setCanadianWorkExperienceYears(2);
         request.setNocCodeCanadian(21223);
         request.setForeignWorkExperienceYears(5);
-        request.setNocCodeForeign("21223");
+        request.setNocCodeForeign(21223);
         request.setWorkingInCanada(true);
         
         // Partner information
@@ -244,7 +243,7 @@ class ProfileServiceTest {
         request.setHasJobOffer(true);
         request.setIsJobOfferLmiaApproved(true);
         request.setJobOfferWageCAD(75000);
-        request.setJobOfferNocCode("21223");
+        request.setJobOfferNocCode(21223);
         
         // Additional information
         request.setSettlementFundsCAD(25000);
@@ -303,7 +302,7 @@ class ProfileServiceTest {
         assertEquals(2, profile.getCanadianWorkExperienceYears());
         assertEquals(Integer.valueOf(21223), profile.getNocCodeCanadian());
         assertEquals(5, profile.getForeignWorkExperienceYears());
-        assertEquals("21223", profile.getNocCodeForeign());
+        assertEquals(Integer.valueOf(21223), profile.getNocCodeForeign());
         assertTrue(profile.isWorkingInCanada());
         
         // Verify partner information
@@ -326,7 +325,7 @@ class ProfileServiceTest {
         assertTrue(profile.isHasJobOffer());
         assertTrue(profile.getIsJobOfferLmiaApproved());
         assertEquals(Integer.valueOf(75000), profile.getJobOfferWageCad());
-        assertEquals("21223", profile.getJobOfferNocCode());
+        assertEquals(Integer.valueOf(21223), profile.getJobOfferNocCode());
         
         // Verify additional information
         assertEquals(25000, profile.getSettlementFundsCad());

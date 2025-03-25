@@ -29,6 +29,8 @@ public class ProfileSubmissionRequest {
     
     private UUID userId; // Optional, can be found by email
     
+    private String googleId; // Google ID from OAuth for alternative identification
+    
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String userEmail;
@@ -110,24 +112,31 @@ public class ProfileSubmissionRequest {
     @Max(value = 12, message = "Secondary writing CLB score must be between 1 and 12")
     private Integer secondaryTestWritingScore;
     
-    // Original test scores (before CLB conversion)
+    // Secondary test original scores
     private String secondaryTestSpeakingOriginal;
     private String secondaryTestListeningOriginal;
     private String secondaryTestReadingOriginal;
     private String secondaryTestWritingOriginal;
     
-    @NotNull(message = "Canadian work experience is required")
-    @PositiveOrZero(message = "Canadian work experience years cannot be negative")
+    // Employment history
+    @NotNull(message = "Years of Canadian work experience required")
+    @PositiveOrZero(message = "Years must be 0 or positive")
     private Integer canadianWorkExperienceYears;
     
     private Integer nocCodeCanadian;
     
-    @NotNull(message = "Foreign work experience is required")
-    @PositiveOrZero(message = "Foreign work experience years cannot be negative")
+    private Integer canadianOccupationTeerCategory;
+    
+    @NotNull(message = "Years of foreign work experience required")
+    @PositiveOrZero(message = "Years must be 0 or positive")
     private Integer foreignWorkExperienceYears;
     
-    private String nocCodeForeign;
+    private Integer nocCodeForeign;
+    
+    private Integer foreignOccupationTeerCategory;
+    
     private Boolean workingInCanada;
+    
     private Boolean hasProvincialNomination;
     
     @NotBlank(message = "Province of interest is required")
@@ -166,7 +175,7 @@ public class ProfileSubmissionRequest {
     @Max(value = 12, message = "Partner writing CLB score must be between 1 and 12")
     private Integer partnerTestWritingScore;
     
-    // Original test scores (before CLB conversion)
+    // Partner original scores
     private String partnerTestSpeakingOriginal;
     private String partnerTestListeningOriginal;
     private String partnerTestReadingOriginal;
@@ -175,13 +184,18 @@ public class ProfileSubmissionRequest {
     @PositiveOrZero(message = "Partner Canadian work experience years cannot be negative")
     private Integer partnerCanadianWorkExperienceYears;
     
+    private Integer spouseOccupationTeerCategory;
+    
     private Boolean hasJobOffer;
     private Boolean isJobOfferLmiaApproved;
     
     @PositiveOrZero(message = "Job offer wage cannot be negative")
     private Integer jobOfferWageCAD;
     
-    private String jobOfferNocCode;
+    private Integer jobOfferNocCode;
+    
+    private Integer jobofferOccupationTeerCategory;
+    
     private String jobOfferWeeklyHours;
     
     private Boolean tradesCertification;

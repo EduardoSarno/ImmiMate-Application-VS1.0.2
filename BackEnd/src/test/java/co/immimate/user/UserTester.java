@@ -33,6 +33,8 @@ public class UserTester {
 
     private static final String BASE_URL = TestConstants.AUTH_BASE_URL;
     
+    // Store the current session's test email
+    private final String testUserEmail;
     private User testUser;
     private String testUserJwtToken;
 
@@ -44,6 +46,15 @@ public class UserTester {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    /**
+     * Constructor that initializes a unique test email for this instance
+     */
+    public UserTester() {
+        // Generate a unique test email for this instance of UserTester
+        this.testUserEmail = TestConstants.generateTestUserEmail();
+        System.out.println("⚡ Initialized UserTester with email: " + testUserEmail);
+    }
 
     /**
      * Creates a test user with the default test credentials.
@@ -52,8 +63,17 @@ public class UserTester {
      * @return The created test user
      */
     public User createTestUser() {
+        // First check if the test user already exists to prevent duplicates
+        Optional<User> existingUser = userRepository.findByEmail(testUserEmail);
+        if (existingUser.isPresent()) {
+            System.out.println("✅ Test user already exists, returning existing user: " + existingUser.get().getEmail());
+            return existingUser.get();
+        }
+        
+        // Create new user if not found
+        System.out.println("✅ Creating new test user: " + testUserEmail);
         User newUser = new User();
-        newUser.setEmail(TestConstants.TEST_USER_EMAIL);
+        newUser.setEmail(testUserEmail);
         newUser.setPassword(passwordEncoder.encode(TestConstants.TEST_USER_PASSWORD));
         newUser.setPhoneNumber(TestConstants.TEST_USER_PHONE);
         newUser.setFirstName(TestConstants.TEST_USER_FIRST_NAME);
@@ -104,15 +124,24 @@ public class UserTester {
     }
 
     /**
-     * Retrieves the default test user, creating it if necessary.
+     * Gets the test user, creating it if it doesn't exist.
      * 
      * @return The test user
      */
     public User getTestUser() {
-        if (testUser == null) {
-            Optional<User> existingUser = userRepository.findByEmail(TestConstants.TEST_USER_EMAIL);
-            testUser = existingUser.orElseGet(this::createTestUser);
+        // Always check the database first in case the user was deleted
+        Optional<User> existingUser = userRepository.findByEmail(testUserEmail);
+        
+        if (existingUser.isPresent()) {
+            // Update the cached user
+            testUser = existingUser.get();
+            System.out.println("✅ Retrieved existing test user: " + testUser.getEmail());
+        } else {
+            // Create the user if it doesn't exist
+            testUser = createTestUser();
+            System.out.println("✅ Created new test user: " + testUser.getEmail());
         }
+        
         return testUser;
     }
 
@@ -121,8 +150,10 @@ public class UserTester {
      * 
      * @return The JWT token
      */
+    @SuppressWarnings("null")
     public String authenticateTestUser() {
-        LoginRequest loginRequest = new LoginRequest(TestConstants.TEST_USER_EMAIL, TestConstants.TEST_USER_PASSWORD);
+        User user = getTestUser(); // Ensure test user exists
+        LoginRequest loginRequest = new LoginRequest(user.getEmail(), TestConstants.TEST_USER_PASSWORD);
 
         ResponseEntity<AuthResponse> response = restTemplate.postForEntity(
                 BASE_URL + "/login",
@@ -145,6 +176,7 @@ public class UserTester {
      * @param password Raw password
      * @return The JWT token if authentication is successful, null otherwise
      */
+    @SuppressWarnings("null")
     public String authenticateUser(String email, String password) {
         LoginRequest loginRequest = new LoginRequest(email, password);
 
@@ -166,7 +198,7 @@ public class UserTester {
      * @return true if authentication properly fails, false otherwise
      */
     public boolean testInvalidAuthentication() {
-        LoginRequest loginRequest = new LoginRequest(TestConstants.TEST_USER_EMAIL, "WrongPassword123!");
+        LoginRequest loginRequest = new LoginRequest(testUserEmail, "WrongPassword123!");
 
         ResponseEntity<AuthResponse> response = restTemplate.postForEntity(
                 BASE_URL + "/login",
@@ -273,10 +305,10 @@ public class UserTester {
      */
     public boolean testDuplicateEmailRegistration() {
         // Ensure test user exists
-        User testUser = getTestUser();
+        User existingUser = getTestUser();
         
         RegisterRequest registerRequest = new RegisterRequest(
-                testUser.getEmail(),
+                existingUser.getEmail(),
                 TestConstants.TEST_USER_PASSWORD,
                 "Duplicate",
                 "User",
@@ -339,5 +371,12 @@ public class UserTester {
             authenticateTestUser();
         }
         return testUserJwtToken;
+    }
+
+    /**
+     * Returns the email being used for the test user in this session
+     */
+    public String getTestUserEmail() {
+        return testUserEmail;
     }
 }

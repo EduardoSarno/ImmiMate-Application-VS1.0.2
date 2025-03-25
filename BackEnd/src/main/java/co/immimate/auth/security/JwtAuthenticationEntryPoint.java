@@ -17,11 +17,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     
+    private static final String CONTENT_TYPE_JSON = "application/json";
+    private static final String ERROR_RESPONSE_FORMAT = "{\"error\":\"Unauthorized\",\"message\":\"%s\"}";
+    
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                         AuthenticationException authException) throws IOException, ServletException {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"" + authException.getMessage() + "\"}");
+        response.setContentType(CONTENT_TYPE_JSON);
+        response.getWriter().write(String.format(ERROR_RESPONSE_FORMAT, authException.getMessage()));
     }
 } 

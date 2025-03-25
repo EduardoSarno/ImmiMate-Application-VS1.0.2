@@ -18,20 +18,32 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RegisterRequest {
     
-    @Email(message = "Email should be valid")
+    // Validation message constants
+    private static final String EMAIL_VALID_MESSAGE = "Email should be valid";
+    private static final String PASSWORD_REQUIRED_MESSAGE = "Password is required";
+    private static final String PASSWORD_SIZE_MESSAGE = "Password must be at least 6 characters";
+    private static final String FIRST_NAME_REQUIRED_MESSAGE = "First name is required";
+    private static final String LAST_NAME_REQUIRED_MESSAGE = "Last name is required";
+    private static final String PHONE_FORMAT_MESSAGE = "Phone number should contain only digits";
+    
+    // Validation constants
+    private static final int PASSWORD_MIN_LENGTH = 6;
+    private static final String PHONE_REGEX = "^\\+?[0-9\\s]+$";
+    
+    @Email(message = EMAIL_VALID_MESSAGE)
     private String email;
     
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @NotBlank(message = PASSWORD_REQUIRED_MESSAGE)
+    @Size(min = PASSWORD_MIN_LENGTH, message = PASSWORD_SIZE_MESSAGE)
     private String password;
     
-    @NotBlank(message = "First name is required")
+    @NotBlank(message = FIRST_NAME_REQUIRED_MESSAGE)
     private String firstName;
     
-    @NotBlank(message = "Last name is required")
+    @NotBlank(message = LAST_NAME_REQUIRED_MESSAGE)
     private String lastName;
     
-    @Pattern(regexp = "^\\+?[0-9\\s]+$", message = "Phone number should contain only digits")
+    @Pattern(regexp = PHONE_REGEX, message = PHONE_FORMAT_MESSAGE)
     private String phoneNumber;
     
     /**

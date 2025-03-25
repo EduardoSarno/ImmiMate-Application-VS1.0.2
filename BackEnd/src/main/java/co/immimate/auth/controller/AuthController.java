@@ -1,5 +1,6 @@
 package co.immimate.auth.controller;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import co.immimate.auth.dto.LoginRequest;
@@ -19,9 +21,33 @@ import co.immimate.auth.service.AuthService;
  * Controller for handling authentication-related endpoints
  */
 @RestController
-@RequestMapping("/auth")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/auth")
+@CrossOrigin(
+    origins = {AuthController.LOCALHOST_ORIGIN}, 
+    allowedHeaders = AuthController.ALL_HEADERS, 
+    allowCredentials = AuthController.ALLOW_CREDENTIALS, 
+    methods = {
+        RequestMethod.GET, 
+        RequestMethod.POST, 
+        RequestMethod.PUT, 
+        RequestMethod.DELETE, 
+        RequestMethod.OPTIONS
+    }
+)
 public class AuthController {
+    
+    // CORS configuration constants
+    public static final String LOCALHOST_ORIGIN = "http://localhost:3000";
+    public static final String ALL_HEADERS = "*";
+    public static final String ALLOW_CREDENTIALS = "true";
+    
+    // API endpoint paths
+    private static final String LOGIN_ENDPOINT = "/login";
+    private static final String REGISTER_ENDPOINT = "/register";
+    private static final String ME_ENDPOINT = "/me";
+    private static final String LOGOUT_ENDPOINT = "/logout";
+    private static final String VERIFY_ENDPOINT = "/verify";
+    private static final String CSRF_TOKEN_ENDPOINT = "/csrf-token";
 
     private final AuthService authService;
 
@@ -34,11 +60,14 @@ public class AuthController {
      * Endpoint for user login
      * 
      * @param loginRequest Contains email and password
-     * @return JWT token and user email on successful authentication
+     * @param response HTTP response to add cookies
+     * @return User details on successful authentication (token is in cookie)
      */
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
-        return authService.authenticateUser(loginRequest);
+    @PostMapping(LOGIN_ENDPOINT)
+    public ResponseEntity<?> loginUser(
+            @Valid @RequestBody LoginRequest loginRequest,
+            HttpServletResponse response) {
+        return authService.authenticateUser(loginRequest, response);
     }
 
     /**
@@ -47,7 +76,7 @@ public class AuthController {
      * @param registerRequest Contains user registration details
      * @return Success message on successful registration
      */
-    @PostMapping("/register")
+    @PostMapping(REGISTER_ENDPOINT)
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         return authService.registerUser(registerRequest);
     }
@@ -57,8 +86,40 @@ public class AuthController {
      * 
      * @return User details
      */
-    @GetMapping("/me")
+    @GetMapping(ME_ENDPOINT)
     public ResponseEntity<?> getCurrentUser() {
         return authService.getCurrentUser();
+    }
+    
+    /**
+     * Logout the current user by clearing the JWT cookie
+     * 
+     * @param response HTTP response to clear cookies
+     * @return Success message
+     */
+    @PostMapping(LOGOUT_ENDPOINT)
+    public ResponseEntity<?> logoutUser(HttpServletResponse response) {
+        return authService.logoutUser(response);
+    }
+    
+    /**
+     * Verify if the current JWT token is valid
+     * 
+     * @return User details if valid, error if not
+     */
+    @GetMapping(VERIFY_ENDPOINT)
+    public ResponseEntity<?> verifyToken() {
+        return authService.verifyCurrentToken();
+    }
+
+    /**
+     * Endpoint to get a CSRF token
+     * This is needed by the frontend to make non-GET requests
+     * 
+     * @return Empty response with CSRF token in cookie
+     */
+    @GetMapping(CSRF_TOKEN_ENDPOINT)
+    public ResponseEntity<?> getCsrfToken() {
+        return ResponseEntity.ok().build();
     }
 } 

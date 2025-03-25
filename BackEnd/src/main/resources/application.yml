@@ -29,8 +29,8 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
-            # This is the Spring Security default callback endpoint pattern
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            # Update the redirect URI to use our custom path
+            redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
             scope:
               - email
               - profile
@@ -50,20 +50,24 @@ jwt:
 # Server Configuration
 server:
   port: 8080
-  servlet:
-    context-path: /api
   forward-headers-strategy: native  # Important for OAuth2 redirects
 
 # Logging Configuration
 logging:
+  file:
+    name: ./logs/application.log
   level:
+    root: INFO
     co.immimate: DEBUG
+    co.immimate.profile.service: TRACE  # Set ProfileService to TRACE level for maximum detail
     co.immimate.auth.security: TRACE  # Enable detailed JWT auth logging
-    co.immimate.profile.controller: DEBUG  # Enable detailed profile controller logging
-    org.springframework.security: DEBUG  # Enable detailed security logging
-    org.springframework.web: DEBUG  # Enable detailed web request logging
+    co.immimate.scoring.fields: TRACE  # Set JobsNoc related classes to TRACE level
+    co.immimate.profile.model: DEBUG   # Set profile model classes to DEBUG level
     org.hibernate: INFO
     org.springframework.security.oauth2: DEBUG  # Enable detailed OAuth2 logging
+  pattern:
+    file: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
 
 # CORS Configuration
 cors:

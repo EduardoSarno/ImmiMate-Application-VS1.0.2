@@ -19,6 +19,10 @@ spring:
     database:
       replace: none  # Don't replace the DataSource bean
 
+  # Enable bean definition overriding for tests
+  main:
+    allow-bean-definition-overriding: true
+
   logging:
     level:
       org.hibernate.SQL: debug

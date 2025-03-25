@@ -2,6 +2,8 @@ package co.immimate.user;
 
 import java.util.UUID;
 
+import javax.servlet.http.Cookie;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -71,7 +73,8 @@ public class UserIntegrationTest {
         
         // Verify test setup was successful
         assertNotNull(testUser, "Test user should not be null");
-        assertEquals(TestConstants.TEST_USER_EMAIL, testUser.getEmail(), "Test user email should match expected value");
+        assertNotNull(testUser.getEmail(), "Test user email should not be null");
+        System.out.println("✅ UserIntegrationTest using email: " + testUser.getEmail());
     }
     
     @Test
@@ -117,19 +120,26 @@ public class UserIntegrationTest {
     @Test
     @DisplayName("Should authenticate user with valid credentials")
     public void shouldAuthenticateUserWithValidCredentials() throws Exception {
-        // Create login request
+        // Create login request using the current test user's email, not the constant
         LoginRequest loginRequest = new LoginRequest(
-                TestConstants.TEST_USER_EMAIL, 
+                testUser.getEmail(), 
                 TestConstants.TEST_USER_PASSWORD
         );
         
         // Perform login
-        mockMvc.perform(post(TestConstants.LOGIN_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(TestConstants.LOGIN_ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").exists())
-                .andExpect(jsonPath("$.email").value(TestConstants.TEST_USER_EMAIL));
+                .andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
+                .andReturn();
+                
+        // Verify JWT cookie is present
+        Cookie jwtCookie = result.getResponse().getCookie("jwt");
+        assertNotNull(jwtCookie, "JWT cookie should not be null");
+        if (jwtCookie != null) {
+            assertTrue(jwtCookie.isHttpOnly(), "JWT cookie should be HTTP-only");
+        }
     }
     
     @Test
@@ -137,7 +147,7 @@ public class UserIntegrationTest {
     public void shouldRejectAuthenticationWithInvalidCredentials() throws Exception {
         // Create login request with wrong password
         LoginRequest loginRequest = new LoginRequest(
-                TestConstants.TEST_USER_EMAIL, 
+                testUser.getEmail(), 
                 "WrongPassword123!"
         );
         
@@ -255,7 +265,7 @@ public class UserIntegrationTest {
     public void shouldAllowAccessToProtectedEndpointWithValidToken() throws Exception {
         // Login to get token
         LoginRequest loginRequest = new LoginRequest(
-                TestConstants.TEST_USER_EMAIL, 
+                testUser.getEmail(), 
                 TestConstants.TEST_USER_PASSWORD
         );
         
@@ -265,18 +275,17 @@ public class UserIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
         
-        // Extract token from response
-        String responseJson = result.getResponse().getContentAsString();
-        String token = objectMapper.readTree(responseJson).get("token").asText();
+        // Extract JWT cookie from response
+        Cookie jwtCookie = result.getResponse().getCookie("jwt");
         
-        // Verify token was obtained
-        assertNotNull(token, "JWT token should not be null");
+        // Verify JWT cookie was obtained
+        assertNotNull(jwtCookie, "JWT cookie should not be null");
         
-        // Access protected endpoint with token
+        // Access protected endpoint with JWT cookie
         mockMvc.perform(get(TestConstants.ME_ENDPOINT)
-                .header("Authorization", "Bearer " + token))
+                .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value(TestConstants.TEST_USER_EMAIL));
+                .andExpect(jsonPath("$.data.email").value(testUser.getEmail()));
     }
     
     @Test

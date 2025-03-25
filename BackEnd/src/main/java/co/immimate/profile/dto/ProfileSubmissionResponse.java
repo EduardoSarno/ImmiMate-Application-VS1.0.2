@@ -2,21 +2,33 @@ package co.immimate.profile.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Value;
 
 import java.util.UUID;
 
-@Data
-@Builder
-@NoArgsConstructor
+/**
+ * Immutable Data Transfer Object for profile submission responses.
+ * Uses Lombok's @Value to create an immutable class with final fields.
+ */
+@Value
+@Builder(toBuilder = true)
 @AllArgsConstructor
 public class ProfileSubmissionResponse {
-    private boolean success;
-    private String message;
-    private UUID profileId;
-    private Integer eligibilityScore;
-    private String profileStatus;
+    boolean success;
+    String message;
+    UUID profileId;
+    Integer eligibilityScore;
+    String profileStatus;
+    
+    // Default constructor needed for frameworks (Jackson deserialization)
+    // Protected to discourage direct usage
+    protected ProfileSubmissionResponse() {
+        this.success = false;
+        this.message = null;
+        this.profileId = null;
+        this.eligibilityScore = null;
+        this.profileStatus = null;
+    }
     
     // Static factory methods for common responses
     public static ProfileSubmissionResponse success(UUID profileId, String message) {

@@ -1,7 +1,9 @@
 package co.immimate.auth;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import javax.servlet.http.Cookie;
+
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -67,7 +69,7 @@ public class AuthenticationIntegrationTest {
         // Verify test setup was successful
         assertNotNull(testUser, "Test user should not be null");
         assertNotNull(testUser.getEmail(), "Test user email should not be null");
-        assertEquals(TestConstants.TEST_USER_EMAIL, testUser.getEmail(), "Test user email should match expected value");
+        System.out.println("✅ Test using email: " + testUser.getEmail());
     }
 
     @Test
@@ -77,14 +79,21 @@ public class AuthenticationIntegrationTest {
         LoginRequest loginRequest = new LoginRequest(testUser.getEmail(), TestConstants.TEST_USER_PASSWORD);
 
         // Perform login
-        mockMvc.perform(post(TestConstants.LOGIN_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(TestConstants.LOGIN_ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").exists())
-                .andExpect(jsonPath("$.email").value(testUser.getEmail()))
-                .andExpect(jsonPath("$.userId").exists())
-                .andExpect(jsonPath("$.role").value("USER"));
+                .andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
+                .andExpect(jsonPath("$.data.userId").exists())
+                .andExpect(jsonPath("$.data.role").value("USER"))
+                .andReturn();
+                
+        // Verify JWT cookie is present
+        Cookie jwtCookie = result.getResponse().getCookie("jwt");
+        assertNotNull(jwtCookie, "JWT cookie should not be null");
+        if (jwtCookie != null) {
+            assertTrue(jwtCookie.isHttpOnly(), "JWT cookie should be HTTP-only");
+        }
     }
 
     @Test
@@ -143,7 +152,7 @@ public class AuthenticationIntegrationTest {
     @Test
     @DisplayName("Should allow access to protected endpoint with valid token")
     public void shouldAllowAccessToProtectedEndpointWithValidToken() throws Exception {
-        // Login to get token - use raw password from TestConstants
+        // Login to get cookie - use raw password from TestConstants
         LoginRequest loginRequest = new LoginRequest(testUser.getEmail(), TestConstants.TEST_USER_PASSWORD);
         
         MvcResult result = mockMvc.perform(post(TestConstants.LOGIN_ENDPOINT)
@@ -152,19 +161,18 @@ public class AuthenticationIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
         
-        // Extract token from response
-        String responseJson = result.getResponse().getContentAsString();
-        String token = objectMapper.readTree(responseJson).get("token").asText();
+        // Extract JWT cookie from response
+        Cookie jwtCookie = result.getResponse().getCookie("jwt");
         
-        // Verify token was obtained
-        assertNotNull(token, "JWT token should not be null");
+        // Verify JWT cookie was obtained
+        assertNotNull(jwtCookie, "JWT cookie should not be null");
         
-        // Access protected endpoint with token
+        // Access protected endpoint with JWT cookie
         mockMvc.perform(get(TestConstants.ME_ENDPOINT)
-                .header("Authorization", "Bearer " + token))
+                .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value(testUser.getEmail()))
-                .andExpect(jsonPath("$.role").value("USER"));
+                .andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
+                .andExpect(jsonPath("$.data.role").value("USER"));
     }
 
     @Test
